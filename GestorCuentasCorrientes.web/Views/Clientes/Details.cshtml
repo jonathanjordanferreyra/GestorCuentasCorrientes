@@ -1,0 +1,133 @@
+@model Cliente
+
+@{
+    ViewData["Title"] = "Detalles del Cliente";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h2>@ViewData["Title"]</h2>
+                </div>
+
+                <div class="card-body">
+                    <!-- Razón Social -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.RazonSocial)</label>
+                                <p class="form-control-plaintext fs-5">
+                                    <strong>@Html.DisplayFor(model => model.RazonSocial)</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.CuitDni)</label>
+                                <p class="form-control-plaintext fs-5">
+                                    <strong>@Html.DisplayFor(model => model.CuitDni)</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Localidad -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Localidad)</label>
+                                <p class="form-control-plaintext fs-5">
+                                    <strong>@Html.DisplayFor(model => model.Localidad.Nombre)</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Provincia</label>
+                                <p class="form-control-plaintext fs-5">
+                                    <strong>@Html.DisplayFor(model => model.Localidad.Provincia)</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Direccion)</label>
+                                <p class="form-control-plaintext">
+                                    @Html.DisplayFor(model => model.Direccion)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teléfono y Email -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Telefono)</label>
+                                <p class="form-control-plaintext">
+                                    @Html.DisplayFor(model => model.Telefono)
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Email)</label>
+                                <p class="form-control-plaintext">
+                                    @if (!string.IsNullOrEmpty(Model.Email))
+                                    {
+                                        <a href="mailto:@Model.Email">@Model.Email</a>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fecha de Alta y Estado -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.FechaAlta)</label>
+                                <p class="form-control-plaintext">
+                                    @Html.DisplayFor(model => model.FechaAlta, "{0:dd/MM/yyyy HH:mm}")
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Activo)</label>
+                                <p class="form-control-plaintext">
+                                    @if (Model.Activo)
+                                    {
+                                        <span class="badge bg-success fs-6">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger fs-6">Inactivo</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Botones de acción -->
+                    <div class="d-flex gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver a Lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

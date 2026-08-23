@@ -27,19 +27,22 @@ builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// Ejecutar seeder de roles y usuarios
+// Ejecutar seeder de roles, usuarios y localidades
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Usuario>>();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     await SeedRolesAsync(roleManager);
     await SeedUsersAsync(userManager);
+    await SeedLocalidadesAsync(context);
 }
 
 // Configure the HTTP request pipeline.
@@ -55,6 +58,7 @@ else
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
@@ -62,13 +66,13 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+// Mapear Razor Pages PRIMERO (para Identity Pages)
+app.MapRazorPages();
+
+// Mapear Controllers MVC después
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
-app.MapRazorPages()
-   .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 
@@ -114,4 +118,31 @@ async Task SeedUsersAsync(UserManager<Usuario> userManager)
         // Asignar el rol "Admin" al usuario
         await userManager.AddToRoleAsync(adminUser, "Admin");
     }
+}
+
+// Método seeder para localidades
+async Task SeedLocalidadesAsync(ApplicationDbContext context)
+{
+    // Verificar si ya existen localidades
+    if (context.Localidades.Any())
+    {
+        return; // Ya existen localidades, no crear más
+    }
+
+    var localidades = new[]
+    {
+        new Localidad { Nombre = "Las Varillas", Provincia = "Córdoba" },
+        new Localidad { Nombre = "San Francisco", Provincia = "Córdoba" },
+        new Localidad { Nombre = "Villa Maria", Provincia = "Córdoba" },
+        new Localidad { Nombre = "Cordoba", Provincia = "Córdoba" },
+        new Localidad { Nombre = "Arroyito", Provincia = "Córdoba" },
+        new Localidad { Nombre = "Balnearia", Provincia = "Córdoba" },
+        new Localidad { Nombre = "Santa Fe", Provincia = "Santa Fe" },
+        new Localidad { Nombre = "Morteros", Provincia = "Córdoba" },
+        new Localidad { Nombre = "Luque", Provincia = "Córdoba" },
+        new Localidad { Nombre = "La Playosa", Provincia = "Córdoba" }
+    };
+
+    context.Localidades.AddRange(localidades);
+    await context.SaveChangesAsync();
 }
