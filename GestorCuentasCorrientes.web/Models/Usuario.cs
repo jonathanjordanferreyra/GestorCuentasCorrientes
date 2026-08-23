@@ -1,16 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace GestorCuentasCorrientes.web.Models
 {
-    public class Usuario
+    public class Usuario : IdentityUser
     {
-        [StringLength(450)]
-        public string Id { get; set; } = null!;
-
-        [Required(ErrorMessage = "El nombre de usuario es requerido")]
-        [StringLength(256, ErrorMessage = "El nombre de usuario no puede exceder 256 caracteres")]
-        [Display(Name = "Nombre de Usuario")]
-        public string UserName { get; set; } = null!;
 
         [Required(ErrorMessage = "El nombre es requerido")]
         [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]

@@ -4,6 +4,7 @@ using GestorCuentasCorrientes.web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestorCuentasCorrientes.web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823155524_Inicial")]
+    partial class Inicial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -201,38 +204,6 @@ namespace GestorCuentasCorrientes.web.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("MediosPago");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Nombre = "Efectivo"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Nombre = "Transferencia"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Nombre = "Cheque"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Nombre = "E-cheque"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Nombre = "Tarjeta débito"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Nombre = "Tarjeta crédito"
-                        });
                 });
 
             modelBuilder.Entity("GestorCuentasCorrientes.web.Models.Movimiento", b =>
@@ -357,50 +328,6 @@ namespace GestorCuentasCorrientes.web.Data.Migrations
                     b.ToTable("TiposMovimiento", t =>
                         {
                             t.HasCheckConstraint("CK_TiposMovimiento_Signo", "Signo IN (1, -1)");
-                        });
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Codigo = "FACT",
-                            Nombre = "Factura",
-                            Signo = (short)1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Codigo = "REC",
-                            Nombre = "Recibo",
-                            Signo = (short)-1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Codigo = "NC",
-                            Nombre = "Nota de crédito",
-                            Signo = (short)-1
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Codigo = "ND",
-                            Nombre = "Nota de débito",
-                            Signo = (short)1
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Codigo = "AJU_D",
-                            Nombre = "Ajuste débito",
-                            Signo = (short)1
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Codigo = "AJU_C",
-                            Nombre = "Ajuste crédito",
-                            Signo = (short)-1
                         });
                 });
 

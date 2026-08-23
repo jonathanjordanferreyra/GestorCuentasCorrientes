@@ -1,11 +1,14 @@
 ﻿using GestorCuentasCorrientes.web.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestorCuentasCorrientes.web.Data
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext(options)
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    : IdentityDbContext<Usuario>(options)
     {
+
         // DbSets para todas las entidades del dominio
         public DbSet<Localidad> Localidades { get; set; }
         public DbSet<TipoMovimiento> TiposMovimiento { get; set; }
@@ -39,7 +42,16 @@ namespace GestorCuentasCorrientes.web.Data
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Signo).IsRequired();
                 // CHECK constraint: Signo IN (1, -1)
-                entity.HasCheckConstraint("CK_TiposMovimiento_Signo", "Signo IN (1, -1)");
+                entity.ToTable(t => t.HasCheckConstraint("CK_TiposMovimiento_Signo", "Signo IN (1, -1)"));
+                entity.HasData(
+                    new TipoMovimiento { Id = 1, Codigo = "FACT", Nombre = "Factura", Signo = 1 },
+                    new TipoMovimiento { Id = 2, Codigo = "REC", Nombre = "Recibo", Signo = -1 },
+                    new TipoMovimiento { Id = 3, Codigo = "NC", Nombre = "Nota de crédito", Signo = -1 },
+                    new TipoMovimiento { Id = 4, Codigo = "ND", Nombre = "Nota de débito", Signo = 1 },
+                    new TipoMovimiento { Id = 5, Codigo = "AJU_D", Nombre = "Ajuste débito", Signo = 1 },
+                    new TipoMovimiento { Id = 6, Codigo = "AJU_C", Nombre = "Ajuste crédito", Signo = -1 }
+                    );
+
             });
 
             // ===== MEDIO PAGO =====
@@ -48,14 +60,20 @@ namespace GestorCuentasCorrientes.web.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(50);
                 entity.HasIndex(e => e.Nombre).IsUnique();
+
+                entity.HasData(
+                    new MedioPago { Id = 1, Nombre = "Efectivo" },
+                    new MedioPago { Id = 2, Nombre = "Transferencia" },
+                    new MedioPago { Id = 3, Nombre = "Cheque" },
+                    new MedioPago { Id = 4, Nombre = "E-cheque" },
+                    new MedioPago { Id = 5, Nombre = "Tarjeta débito" },
+                    new MedioPago { Id = 6, Nombre = "Tarjeta crédito" }
+                    );
             });
 
             // ===== USUARIO =====
             modelBuilder.Entity<Usuario>(entity =>
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).HasMaxLength(450);
-                entity.Property(e => e.UserName).IsRequired().HasMaxLength(256);
                 entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Apellido).IsRequired().HasMaxLength(100);
             });
@@ -105,7 +123,7 @@ namespace GestorCuentasCorrientes.web.Data
                 entity.Property(e => e.Anulado).HasDefaultValue(false);
 
                 // CHECK constraint: Importe > 0
-                entity.HasCheckConstraint("CK_Movimientos_Importe", "Importe > 0");
+                entity.ToTable(t => t.HasCheckConstraint("CK_Movimientos_Importe", "Importe > 0"));
 
                 // Relación con Cliente (N:1)
                 entity.HasOne(e => e.Cliente)
@@ -152,7 +170,7 @@ namespace GestorCuentasCorrientes.web.Data
                 entity.Property(e => e.Importe).IsRequired().HasPrecision(12, 2);
 
                 // CHECK constraint: Importe > 0
-                entity.HasCheckConstraint("CK_Pagos_Importe", "Importe > 0");
+                entity.ToTable(t => t.HasCheckConstraint("CK_Pagos_Importe", "Importe > 0"));
 
                 // Relación con Movimiento (N:1)
                 entity.HasOne(e => e.Movimiento)
@@ -185,8 +203,8 @@ namespace GestorCuentasCorrientes.web.Data
                 entity.Property(e => e.Estado).IsRequired().HasMaxLength(20).HasDefaultValue("EnCartera");
 
                 // CHECK constraint: Estado IN ('EnCartera', 'Depositado', 'Acreditado', 'Rechazado')
-                entity.HasCheckConstraint("CK_Cheques_Estado",
-                    "Estado IN ('EnCartera', 'Depositado', 'Acreditado', 'Rechazado')");
+                entity.ToTable(t => t.HasCheckConstraint("CK_Cheques_Estado",
+                    "Estado IN ('EnCartera', 'Depositado', 'Acreditado', 'Rechazado')"));
 
                 // Unique constraint en PagoId (1:1)
                 entity.HasIndex(e => e.PagoId).IsUnique();
