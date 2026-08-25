@@ -1,5 +1,6 @@
 using GestorCuentasCorrientes.web.Data;
 using GestorCuentasCorrientes.web.Models;
+using GestorCuentasCorrientes.web.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -77,7 +78,48 @@ namespace GestorCuentasCorrientes.web.Controllers
             if (cliente == null)
                 return NotFound();
 
-            return View(cliente);
+            // Traer todos los movimientos (incluidos anulados) con TipoMovimiento y Comprobantes, ordenados por Fecha e Id
+            var movimientos = await _context.Movimientos
+                .Where(m => m.ClienteId == id)
+                .Include(m => m.TipoMovimiento)
+                .Include(m => m.Comprobantes)
+                .AsNoTracking()
+                .OrderBy(m => m.Fecha)
+                .ThenBy(m => m.Id)
+                .ToListAsync();
+
+            // Calcular SaldoActual y construir lista de MovimientoDetalleVm con SaldoAcumulado
+            decimal saldoActual = 0;
+            var movimientosVm = new List<MovimientoDetalleVm>();
+
+            foreach (var mov in movimientos)
+            {
+                // Sumar importe actual al saldo (incluidos anulados)
+                saldoActual += mov.Importe * mov.TipoMovimiento!.Signo;
+
+                movimientosVm.Add(new MovimientoDetalleVm
+                {
+                    Id = mov.Id,
+                    Fecha = mov.Fecha,
+                    TipoMovimientoNombre = mov.TipoMovimiento.Nombre,
+                    NumeroComprobante = mov.NumeroComprobante,
+                    Importe = mov.Importe,
+                    Signo = mov.TipoMovimiento.Signo,
+                    Anulado = mov.Anulado,
+                    SaldoAcumulado = saldoActual,
+                    ComprobanteId = mov.Comprobantes.FirstOrDefault()?.Id
+                });
+            }
+
+            // Armar ViewModel
+            var viewModel = new ClienteDetalleVm
+            {
+                Cliente = cliente,
+                SaldoActual = saldoActual,
+                Movimientos = movimientosVm
+            };
+
+            return View(viewModel);
         }
 
         // GET: Clientes/Create

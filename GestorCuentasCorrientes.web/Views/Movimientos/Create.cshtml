@@ -1,0 +1,110 @@
+@using GestorCuentasCorrientes.web.Models.ViewModels
+@model MovimientoSimpleCreateVm
+
+@{
+    ViewData["Title"] = "Nuevo Movimiento";
+    var clientePrecargado = ViewBag.Clientes == null;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h2>@ViewData["Title"]</h2>
+                </div>
+
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <!-- Cliente -->
+                        <div class="mb-3">
+                            <label asp-for="ClienteId" class="form-label"></label>
+                            @if (clientePrecargado)
+                            {
+                                <!-- Cliente precargado y bloqueado -->
+                                <input type="hidden" asp-for="ClienteId" />
+                                <div class="form-control-plaintext">
+                                    <strong>@Model.ClienteNombre</strong>
+                                </div>
+                                <small class="text-muted d-block mt-1">Cliente preseleccionado</small>
+                            }
+                            else
+                            {
+                                <!-- Dropdown de clientes activos -->
+                                <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select">
+                                    <option value="">-- Selecciona un cliente --</option>
+                                </select>
+                                <span asp-validation-for="ClienteId" class="text-danger"></span>
+                            }
+                        </div>
+
+                        <!-- Tipo de Movimiento -->
+                        <div class="mb-3">
+                            <label asp-for="TipoMovimientoId" class="form-label"></label>
+                            <select asp-for="TipoMovimientoId" asp-items="ViewBag.TiposMovimiento" class="form-select">
+                                <option value="">-- Selecciona tipo --</option>
+                            </select>
+                            <span asp-validation-for="TipoMovimientoId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Fecha -->
+                        <div class="mb-3">
+                            <label asp-for="Fecha" class="form-label"></label>
+                            <input asp-for="Fecha" type="date" class="form-control" />
+                            <span asp-validation-for="Fecha" class="text-danger"></span>
+                        </div>
+
+                        <!-- Número de Comprobante -->
+                        <div class="mb-3">
+                            <label asp-for="NumeroComprobante" class="form-label"></label>
+                            <input asp-for="NumeroComprobante" type="text" class="form-control" placeholder="Ej: FAC-001-00001" />
+                            <span asp-validation-for="NumeroComprobante" class="text-danger"></span>
+                        </div>
+
+                        <!-- Importe -->
+                        <div class="mb-3">
+                            <label asp-for="Importe" class="form-label"></label>
+                            <input asp-for="Importe" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                            <span asp-validation-for="Importe" class="text-danger"></span>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="mb-3">
+                            <label asp-for="Observaciones" class="form-label"></label>
+                            <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Notas o detalles adicionales..."></textarea>
+                            <span asp-validation-for="Observaciones" class="text-danger"></span>
+                        </div>
+
+                        <!-- Archivo Comprobante -->
+                        <div class="mb-3">
+                            <label asp-for="ArchivoComprobante" class="form-label"></label>
+                            <input asp-for="ArchivoComprobante" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt" />
+                            <small class="text-muted d-block mt-1">Archivos aceptados: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, TXT (opcional)</small>
+                            <span asp-validation-for="ArchivoComprobante" class="text-danger"></span>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Botones de acción -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Guardar Movimiento
+                            </button>
+                            <a asp-controller="Clientes" asp-action="Details" asp-route-id="@Model.ClienteId" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

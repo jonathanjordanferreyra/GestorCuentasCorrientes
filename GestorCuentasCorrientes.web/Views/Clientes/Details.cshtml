@@ -1,4 +1,5 @@
-@model Cliente
+@using GestorCuentasCorrientes.web.Models.ViewModels
+@model ClienteDetalleVm
 
 @{
     ViewData["Title"] = "Detalles del Cliente";
@@ -17,17 +18,17 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.RazonSocial)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.RazonSocial)</label>
                                 <p class="form-control-plaintext fs-5">
-                                    <strong>@Html.DisplayFor(model => model.RazonSocial)</strong>
+                                    <strong>@Html.DisplayFor(model => model.Cliente.RazonSocial)</strong>
                                 </p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.CuitDni)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.CuitDni)</label>
                                 <p class="form-control-plaintext fs-5">
-                                    <strong>@Html.DisplayFor(model => model.CuitDni)</strong>
+                                    <strong>@Html.DisplayFor(model => model.Cliente.CuitDni)</strong>
                                 </p>
                             </div>
                         </div>
@@ -37,9 +38,9 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Localidad)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.Localidad)</label>
                                 <p class="form-control-plaintext fs-5">
-                                    <strong>@Html.DisplayFor(model => model.Localidad.Nombre)</strong>
+                                    <strong>@Html.DisplayFor(model => model.Cliente.Localidad.Nombre)</strong>
                                 </p>
                             </div>
                         </div>
@@ -47,7 +48,7 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted">Provincia</label>
                                 <p class="form-control-plaintext fs-5">
-                                    <strong>@Html.DisplayFor(model => model.Localidad.Provincia)</strong>
+                                    <strong>@Html.DisplayFor(model => model.Cliente.Localidad.Provincia)</strong>
                                 </p>
                             </div>
                         </div>
@@ -57,9 +58,9 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Direccion)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.Direccion)</label>
                                 <p class="form-control-plaintext">
-                                    @Html.DisplayFor(model => model.Direccion)
+                                    @Html.DisplayFor(model => model.Cliente.Direccion)
                                 </p>
                             </div>
                         </div>
@@ -69,19 +70,19 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Telefono)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.Telefono)</label>
                                 <p class="form-control-plaintext">
-                                    @Html.DisplayFor(model => model.Telefono)
+                                    @Html.DisplayFor(model => model.Cliente.Telefono)
                                 </p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Email)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.Email)</label>
                                 <p class="form-control-plaintext">
-                                    @if (!string.IsNullOrEmpty(Model.Email))
+                                    @if (!string.IsNullOrEmpty(Model.Cliente.Email))
                                     {
-                                        <a href="mailto:@Model.Email">@Model.Email</a>
+                                        <a href="mailto:@Model.Cliente.Email">@Model.Cliente.Email</a>
                                     }
                                 </p>
                             </div>
@@ -92,17 +93,17 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.FechaAlta)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.FechaAlta)</label>
                                 <p class="form-control-plaintext">
-                                    @Html.DisplayFor(model => model.FechaAlta, "{0:dd/MM/yyyy HH:mm}")
+                                    @Html.DisplayFor(model => model.Cliente.FechaAlta, "{0:dd/MM/yyyy HH:mm}")
                                 </p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Activo)</label>
+                                <label class="form-label text-muted">@Html.DisplayNameFor(model => model.Cliente.Activo)</label>
                                 <p class="form-control-plaintext">
-                                    @if (Model.Activo)
+                                    @if (Model.Cliente.Activo)
                                     {
                                         <span class="badge bg-success fs-6">Activo</span>
                                     }
@@ -117,9 +118,108 @@
 
                     <hr class="my-4">
 
+                    <!-- SALDO ACTUAL - Destacado -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="alert p-4" role="alert" style="background-color: @(Model.SaldoActual > 0 ? "#fff3cd" : Model.SaldoActual == 0 ? "#d1ecf1" : "#f8d7da"); border: 2px solid @(Model.SaldoActual > 0 ? "#ffc107" : Model.SaldoActual == 0 ? "#17a2b8" : "#dc3545");">
+                                <label class="form-label text-muted mb-2">Saldo Cuenta Corriente</label>
+                                <p class="fs-3 mb-0" style="color: @(Model.SaldoActual > 0 ? "#856404" : Model.SaldoActual == 0 ? "#0c5460" : "#721c24"); font-weight: bold;">
+                                    @Model.SaldoActual.ToString("C")
+                                </p>
+                                <small style="color: @(Model.SaldoActual > 0 ? "#856404" : Model.SaldoActual == 0 ? "#0c5460" : "#721c24");">
+                                    @if (Model.SaldoActual > 0)
+                                    {
+                                        <span>El cliente debe esta cantidad</span>
+                                    }
+                                    else if (Model.SaldoActual == 0)
+                                    {
+                                        <span>Sin deuda</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Cliente tiene a favor esta cantidad</span>
+                                    }
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- MOVIMIENTOS -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Movimientos</h4>
+                        <a asp-controller="Movimientos" asp-action="Create" asp-route-clienteId="@Model.Cliente.Id" class="btn btn-sm btn-success">
+                            <i class="bi bi-plus-circle"></i> Nuevo Movimiento
+                        </a>
+                    </div>
+
+                    @if (Model.Movimientos.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Comprobante</th>
+                                        <th class="text-end">Importe</th>
+                                        <th class="text-end">Saldo Acum.</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var mov in Model.Movimientos)
+                                    {
+                                        <tr @if (mov.Anulado) { <text>class="table-secondary"</text> }>
+                                            <td>@mov.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                @mov.TipoMovimientoNombre
+                                                @if (mov.Anulado)
+                                                {
+                                                    <span class="badge bg-warning text-dark ms-2">Corregido</span>
+                                                }
+                                            </td>
+                                            <td>@mov.NumeroComprobante</td>
+                                            <td class="text-end">
+                                                @if (mov.Signo > 0)
+                                                {
+                                                    <span style="color: #dc3545;">+@mov.Importe.ToString("N2")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #28a745;">-@mov.Importe.ToString("N2")</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <strong>@mov.SaldoAcumulado.ToString("N2")</strong>
+                                            </td>
+                                            <td>
+                                                @if (mov.ComprobanteId.HasValue)
+                                                {
+                                                    <a asp-controller="Movimientos" asp-action="VerComprobante" asp-route-id="@mov.ComprobanteId.Value" target="_blank" class="btn btn-sm btn-outline-primary" title="Ver comprobante">
+                                                        <i class="bi bi-file-pdf"></i> Ver
+                                                    </a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i> No hay movimientos registrados para este cliente.
+                        </div>
+                    }
+
+                    <hr class="my-4">
+
                     <!-- Botones de acción -->
                     <div class="d-flex gap-2">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <a asp-action="Edit" asp-route-id="@Model.Cliente.Id" class="btn btn-primary">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
                         <a asp-action="Index" class="btn btn-outline-secondary">
