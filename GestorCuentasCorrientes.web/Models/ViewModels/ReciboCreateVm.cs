@@ -30,7 +30,6 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
         [DataType(DataType.Date)]
         public DateTime? ChequeFechaCobro { get; set; }
     }
-
     public class ReciboCreateVm
     {
         public int ClienteId { get; set; }
@@ -54,10 +53,7 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
         [Display(Name = "Archivo Comprobante")]
         public IFormFile? ArchivoComprobante { get; set; }
 
-        // Línea 1: siempre obligatoria
-        public PagoLineaVm Pago1 { get; set; } = new();
-
-        // Línea 2: opcional, para pagos combinados
-        public PagoLineaVm? Pago2 { get; set; }
+        // Lista de tamaño variable: 1 pago, 2, 5, los que hagan falta
+        public List<PagoLineaVm> Pagos { get; set; } = new() { new PagoLineaVm() };
     }
 }
