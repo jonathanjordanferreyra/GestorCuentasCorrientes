@@ -1,0 +1,63 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.ComponentModel.DataAnnotations;
+
+namespace GestorCuentasCorrientes.web.Models.ViewModels
+{
+    public class PagoLineaVm
+    {
+        [Display(Name = "Medio de Pago")]
+        public int MedioPagoId { get; set; }
+
+        [Display(Name = "Importe")]
+        public decimal Importe { get; set; }
+
+        // Solo se completan si el medio de pago elegido es Cheque o E-cheque
+        [Display(Name = "Número de Cheque")]
+        public string? ChequeNumero { get; set; }
+
+        [Display(Name = "Banco")]
+        public string? ChequeBanco { get; set; }
+
+        [Display(Name = "Titular")]
+        public string? ChequeTitular { get; set; }
+
+        [Display(Name = "Fecha de Emisión")]
+        [DataType(DataType.Date)]
+        public DateTime? ChequeFechaEmision { get; set; }
+
+        [Display(Name = "Fecha de Cobro")]
+        [DataType(DataType.Date)]
+        public DateTime? ChequeFechaCobro { get; set; }
+    }
+
+    public class ReciboCreateVm
+    {
+        public int ClienteId { get; set; }
+
+        [BindNever]
+        [Display(Name = "Cliente")]
+        public string? ClienteNombre { get; set; }
+
+        [Display(Name = "Fecha")]
+        [DataType(DataType.Date)]
+        public DateTime Fecha { get; set; } = DateTime.Now;
+
+        [StringLength(30, ErrorMessage = "El número de comprobante no puede exceder 30 caracteres")]
+        [Display(Name = "Número de Comprobante")]
+        public string? NumeroComprobante { get; set; }
+
+        [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder 500 caracteres")]
+        [Display(Name = "Observaciones")]
+        public string? Observaciones { get; set; }
+
+        [Display(Name = "Archivo Comprobante")]
+        public IFormFile? ArchivoComprobante { get; set; }
+
+        // Línea 1: siempre obligatoria
+        public PagoLineaVm Pago1 { get; set; } = new();
+
+        // Línea 2: opcional, para pagos combinados
+        public PagoLineaVm? Pago2 { get; set; }
+    }
+}

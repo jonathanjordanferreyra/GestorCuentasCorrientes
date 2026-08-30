@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.ComponentModel.DataAnnotations;
 
 namespace GestorCuentasCorrientes.web.Models.ViewModels
@@ -7,8 +8,9 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
     {
         public int ClienteId { get; set; }
 
+        [BindNever]
         [Display(Name = "Cliente")]
-        public string ClienteNombre { get; set; } = null!;
+        public string? ClienteNombre { get; set; } 
 
         [Display(Name = "Tipo de Movimiento")]
         public int TipoMovimientoId { get; set; }

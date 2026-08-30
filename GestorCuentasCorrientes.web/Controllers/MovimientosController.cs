@@ -28,36 +28,19 @@ namespace GestorCuentasCorrientes.web.Controllers
         }
 
         // GET: Movimientos/Create
-        public async Task<IActionResult> Create(int? clienteId)
+        public async Task<IActionResult> Create(int clienteId)
         {
+            var cliente = await _context.Clientes.FindAsync(clienteId);
+            if (cliente == null)
+                return NotFound();
+
             var viewModel = new MovimientoSimpleCreateVm
             {
-                Fecha = DateTime.Now
+                Fecha = DateTime.Now,
+                ClienteId = cliente.Id,
+                ClienteNombre = cliente.RazonSocial
             };
 
-            // Si vino clienteId, precargá y bloqueá el cliente
-            if (clienteId.HasValue)
-            {
-                var cliente = await _context.Clientes.FindAsync(clienteId);
-                if (cliente == null)
-                    return NotFound();
-
-                viewModel.ClienteId = cliente.Id;
-                viewModel.ClienteNombre = cliente.RazonSocial;
-            }
-            else
-            {
-                // Mostrar dropdown con clientes activos
-                ViewBag.Clientes = new SelectList(
-                    await _context.Clientes
-                        .Where(c => c.Activo)
-                        .OrderBy(c => c.RazonSocial)
-                        .ToListAsync(),
-                    "Id",
-                    "RazonSocial");
-            }
-
-            // Dropdown de TipoMovimiento, excluyendo "REC" (Recibo)
             ViewBag.TiposMovimiento = new SelectList(
                 await _context.TiposMovimiento
                     .Where(tm => tm.Codigo != "REC")
@@ -76,18 +59,9 @@ namespace GestorCuentasCorrientes.web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Repoblar los dropdowns en caso de error
-                if (viewModel.ClienteId == 0)
-                {
-                    ViewBag.Clientes = new SelectList(
-                        await _context.Clientes
-                            .Where(c => c.Activo)
-                            .OrderBy(c => c.RazonSocial)
-                            .ToListAsync(),
-                        "Id",
-                        "RazonSocial",
-                        viewModel.ClienteId);
-                }
+                // Reconstruir el nombre del cliente (es de solo lectura, no viaja en el POST)
+                var clientePreseleccionado = await _context.Clientes.FindAsync(viewModel.ClienteId);
+                viewModel.ClienteNombre = clientePreseleccionado?.RazonSocial ?? string.Empty;
 
                 ViewBag.TiposMovimiento = new SelectList(
                     await _context.TiposMovimiento
@@ -124,7 +98,33 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return View(viewModel);
             }
 
-            // Obtener UsuarioId del usuario logueado
+            // Evitar cargar dos veces el mismo comprobante para el mismo tipo de movimiento
+            if (!string.IsNullOrWhiteSpace(viewModel.NumeroComprobante))
+            {
+                var yaExiste = await _context.Movimientos.AnyAsync(m =>
+                    m.TipoMovimientoId == viewModel.TipoMovimientoId &&
+                    m.NumeroComprobante == viewModel.NumeroComprobante);
+
+                if (yaExiste)
+                {
+                    ModelState.AddModelError("", $"Ya existe un movimiento de este tipo con el número de comprobante '{viewModel.NumeroComprobante}'.");
+
+                    var clientePreseleccionado = await _context.Clientes.FindAsync(viewModel.ClienteId);
+                    viewModel.ClienteNombre = clientePreseleccionado?.RazonSocial ?? string.Empty;
+
+                    ViewBag.TiposMovimiento = new SelectList(
+                        await _context.TiposMovimiento
+                            .Where(tm => tm.Codigo != "REC")
+                            .OrderBy(tm => tm.Nombre)
+                            .ToListAsync(),
+                        "Id",
+                        "Nombre",
+                        viewModel.TipoMovimientoId);
+
+                    return View(viewModel);
+                }
+            }
+
             var usuarioId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(usuarioId))
             {
@@ -132,7 +132,6 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return View(viewModel);
             }
 
-            // Crear el Movimiento
             var movimiento = new Movimiento
             {
                 ClienteId = viewModel.ClienteId,
@@ -149,25 +148,19 @@ namespace GestorCuentasCorrientes.web.Controllers
             _context.Movimientos.Add(movimiento);
             await _context.SaveChangesAsync();
 
-            // Procesar archivo comprobante si viene
             if (viewModel.ArchivoComprobante != null && viewModel.ArchivoComprobante.Length > 0)
             {
-                // Crear carpeta App_Data/Comprobantes/{movimientoId} si no existe
                 var appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Comprobantes", movimiento.Id.ToString());
                 Directory.CreateDirectory(appDataPath);
 
-                // Generar nombre único para el archivo
                 var fileName = Path.GetFileName(viewModel.ArchivoComprobante.FileName);
                 var filePath = Path.Combine(appDataPath, fileName);
 
-                // Guardar archivo
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await viewModel.ArchivoComprobante.CopyToAsync(stream);
                 }
 
-                // Crear registro en Comprobantes
-                // Guardar solo la ruta relativa: App_Data/Comprobantes/{movimientoId}/{fileName}
                 var rutaRelativa = Path.Combine("App_Data", "Comprobantes", movimiento.Id.ToString(), fileName);
 
                 var comprobante = new Comprobante
@@ -227,7 +220,7 @@ namespace GestorCuentasCorrientes.web.Controllers
                 "txt" => "text/plain",
                 _ => "application/octet-stream"
             };
-            
+
         }
     }
 }

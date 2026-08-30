@@ -3,7 +3,6 @@
 
 @{
     ViewData["Title"] = "Nuevo Movimiento";
-    var clientePrecargado = ViewBag.Clientes == null;
 }
 
 <div class="container mt-4">
@@ -18,26 +17,14 @@
                     <form asp-action="Create" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                        <!-- Cliente -->
+                        <!-- Cliente (precargado y bloqueado) -->
                         <div class="mb-3">
                             <label asp-for="ClienteId" class="form-label"></label>
-                            @if (clientePrecargado)
-                            {
-                                <!-- Cliente precargado y bloqueado -->
-                                <input type="hidden" asp-for="ClienteId" />
-                                <div class="form-control-plaintext">
-                                    <strong>@Model.ClienteNombre</strong>
-                                </div>
-                                <small class="text-muted d-block mt-1">Cliente preseleccionado</small>
-                            }
-                            else
-                            {
-                                <!-- Dropdown de clientes activos -->
-                                <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select">
-                                    <option value="">-- Selecciona un cliente --</option>
-                                </select>
-                                <span asp-validation-for="ClienteId" class="text-danger"></span>
-                            }
+                            <input type="hidden" asp-for="ClienteId" />
+                            <div class="form-control-plaintext">
+                                <strong>@Model.ClienteNombre</strong>
+                            </div>
+                            <small class="text-muted d-block mt-1">Cliente preseleccionado</small>
                         </div>
 
                         <!-- Tipo de Movimiento -->
