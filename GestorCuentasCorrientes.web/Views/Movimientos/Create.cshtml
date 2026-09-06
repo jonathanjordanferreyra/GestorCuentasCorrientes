@@ -1,5 +1,5 @@
 @using GestorCuentasCorrientes.web.Models.ViewModels
-@model MovimientoSimpleCreateVm
+@model MovimientoRecibosCreateVm
 
 @{
     ViewData["Title"] = "Nuevo Movimiento";
@@ -30,7 +30,7 @@
                         <!-- Tipo de Movimiento -->
                         <div class="mb-3">
                             <label asp-for="TipoMovimientoId" class="form-label"></label>
-                            <select asp-for="TipoMovimientoId" asp-items="ViewBag.TiposMovimiento" class="form-select">
+                            <select asp-for="TipoMovimientoId" asp-items="ViewBag.TiposMovimiento" class="form-select" required>
                                 <option value="">-- Selecciona tipo --</option>
                             </select>
                             <span asp-validation-for="TipoMovimientoId" class="text-danger"></span>
@@ -50,10 +50,10 @@
                             <span asp-validation-for="NumeroComprobante" class="text-danger"></span>
                         </div>
 
-                        <!-- Importe -->
-                        <div class="mb-3">
+                        <!-- Importe (solo para movimientos simples, oculto para Recibos) -->
+                        <div class="mb-3" id="divImporte" style="display: none;">
                             <label asp-for="Importe" class="form-label"></label>
-                            <input asp-for="Importe" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                            <input asp-for="Importe" id="inputImporte" type="number" step="0.01" class="form-control" placeholder="0.00" /> 
                             <span asp-validation-for="Importe" class="text-danger"></span>
                         </div>
 
@@ -62,6 +62,95 @@
                             <label asp-for="Observaciones" class="form-label"></label>
                             <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Notas o detalles adicionales..."></textarea>
                             <span asp-validation-for="Observaciones" class="text-danger"></span>
+                        </div>
+
+                        <!-- LÍNEAS DE PAGO (solo para Recibos) -->
+                        <div id="seccionPagos" style="display: none;" class="mb-4 p-4 border rounded bg-light">
+                            <h5 class="mb-4"><i class="bi bi-receipt"></i> Líneas de Pago</h5>
+
+                            <div id="pagosContainer" class="mb-4">
+                                @for (int i = 0; i < Model.Pagos.Count; i++)
+                                {
+                                    <div class="pago-row card mb-3 shadow-sm" data-pago-index="@i">
+                                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                                            <span class="fw-bold text-muted">Línea de Pago #<span class="numero-linea">@(i + 1)</span></span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar" aria-label="Eliminar línea de pago" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <!-- Medio de Pago -->
+                                                <div class="col-md-6">
+                                                    <label asp-for="Pagos[i].MedioPagoId" class="form-label fw-semibold"></label>
+                                                    <select asp-for="Pagos[i].MedioPagoId" 
+                                                            asp-items="@(ViewBag.MediosPago as SelectList)"
+                                                            class="form-select select-medio-pago"
+                                                            required>
+                                                        <option value="">-- Seleccionar Medio --</option>
+                                                    </select>
+                                                    <span asp-validation-for="Pagos[i].MedioPagoId" class="text-danger small d-block mt-1"></span>
+                                                </div>
+
+                                                <!-- Importe Línea -->
+                                                <div class="col-md-6">
+                                                    <label asp-for="Pagos[i].Importe" class="form-label fw-semibold"></label>
+                                                    <input asp-for="Pagos[i].Importe" 
+                                                           type="number" step="0.01" min="0.01" 
+                                                           class="form-control input-importe"
+                                                           placeholder="0.00"
+                                                           required />
+                                                    <span asp-validation-for="Pagos[i].Importe" class="text-danger small d-block mt-1"></span>
+                                                </div>
+
+                                                <!-- Bloque de Cheque (siempre en HTML, oculto con CSS) -->
+                                                <div class="col-12 bloque-cheque" style="display: none;">
+                                                    <div class="border-start border-4 border-info ps-3 py-2">
+                                                        <h6 class="text-info mb-3"><i class="bi bi-info-circle"></i> Datos del Cheque</h6>
+                                                        <div class="row g-3">
+                                                            <div class="col-md-6">
+                                                                <label asp-for="Pagos[i].ChequeNumero" class="form-label"></label>
+                                                                <input asp-for="Pagos[i].ChequeNumero" type="text" class="form-control" placeholder="Ej: 123456" />
+                                                                <span asp-validation-for="Pagos[i].ChequeNumero" class="text-danger small d-block mt-1"></span>
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <label asp-for="Pagos[i].ChequeBanco" class="form-label"></label>
+                                                                <input asp-for="Pagos[i].ChequeBanco" type="text" class="form-control" placeholder="Ej: Banco Nación" />
+                                                                <span asp-validation-for="Pagos[i].ChequeBanco" class="text-danger small d-block mt-1"></span>
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <label asp-for="Pagos[i].ChequeTitular" class="form-label"></label>
+                                                                <input asp-for="Pagos[i].ChequeTitular" type="text" class="form-control" placeholder="Nombre del titular" />
+                                                                <span asp-validation-for="Pagos[i].ChequeTitular" class="text-danger small d-block mt-1"></span>
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <label asp-for="Pagos[i].ChequeFechaEmision" class="form-label"></label>
+                                                                <input asp-for="Pagos[i].ChequeFechaEmision" type="date" class="form-control" />
+                                                                <span asp-validation-for="Pagos[i].ChequeFechaEmision" class="text-danger small d-block mt-1"></span>
+                                                            </div>
+
+                                                            <div class="col-12">
+                                                                <label asp-for="Pagos[i].ChequeFechaCobro" class="form-label"></label>
+                                                                <input asp-for="Pagos[i].ChequeFechaCobro" type="date" class="form-control" />
+                                                                <span asp-validation-for="Pagos[i].ChequeFechaCobro" class="text-danger small d-block mt-1"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Botón Agregar Pago -->
+                            <button type="button" id="btnAgregarPago" class="btn btn-outline-primary">
+                                <i class="bi bi-plus-circle"></i> Agregar otra línea de pago
+                            </button>
                         </div>
 
                         <!-- Archivo Comprobante -->
@@ -94,4 +183,219 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectTipo = document.querySelector('select[name="TipoMovimientoId"]');
+            const divImporte = document.getElementById('divImporte');
+            const inputImporte = document.getElementById('inputImporte');
+            const seccionPagos = document.getElementById('seccionPagos');
+            const container = document.getElementById('pagosContainer');
+            const btnAgregar = document.getElementById('btnAgregarPago');
+
+            // ============================================
+            // Mostrar/ocultar campos según tipo
+            // ============================================
+            function actualizarFormulario() {
+    const selectedIndex = selectTipo.selectedIndex;
+    const selectedText = selectTipo.options[selectedIndex]?.text || '';
+    const esRecibo = selectedText.includes('Recibo');
+
+    if (esRecibo) {
+        divImporte.style.display = 'none';
+        seccionPagos.style.display = 'block';
+
+        // El Recibo calcula el importe a partir de sus líneas de pago
+        inputImporte.disabled = true;
+    } else {
+        divImporte.style.display = 'block';
+        seccionPagos.style.display = 'none';
+
+        // Los movimientos simples sí usan el importe principal
+        inputImporte.disabled = false;
+    }
+}
+
+            if (selectTipo) {
+                selectTipo.addEventListener('change', actualizarFormulario);
+                // Inicializar al cargar
+                actualizarFormulario();
+            }
+
+            // ============================================
+            // Funcionalidad de líneas de pago
+            // ============================================
+
+            function toggleChequeCampos(pagoRow) {
+                const selectMedio = pagoRow.querySelector('.select-medio-pago');
+                const bloqueCheque = pagoRow.querySelector('.bloque-cheque');
+
+                if (!selectMedio || !bloqueCheque) return;
+
+                const medioTexto = selectMedio.options[selectMedio.selectedIndex]?.text || '';
+                // Detecta tanto "Cheque" como "E-cheque"
+                const esCheque = medioTexto.includes('Cheque') || medioTexto.includes('cheque');
+
+                bloqueCheque.style.display = esCheque ? 'block' : 'none';
+            }
+
+            function inicializarPagoRow(pagoRow) {
+                const selectMedio = pagoRow.querySelector('.select-medio-pago');
+                const btnEliminar = pagoRow.querySelector('.btn-eliminar');
+
+                if (selectMedio) {
+                    selectMedio.addEventListener('change', function () {
+                        toggleChequeCampos(pagoRow);
+                    });
+                    toggleChequeCampos(pagoRow);
+                }
+
+                if (btnEliminar) {
+                    btnEliminar.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        pagoRow.remove();
+                        reindexarPagos();
+                    });
+                }
+            }
+
+            // Inicializar filas existentes
+            document.querySelectorAll('.pago-row').forEach(row => {
+                inicializarPagoRow(row);
+            });
+
+            function reindexarPagos() {
+                const pagoRows = document.querySelectorAll('.pago-row');
+                pagoRows.forEach((row, indice) => {
+                    row.setAttribute('data-pago-index', indice);
+
+                    // Actualizar número de línea visual
+                    const numeroLinea = row.querySelector('.numero-linea');
+                    if (numeroLinea) {
+                        numeroLinea.textContent = indice + 1;
+                    }
+
+                    const inputs = row.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name) {
+                            const newName = name.replace(/Pagos\[\d+\]/g, `Pagos[${indice}]`);
+                            input.setAttribute('name', newName);
+                        }
+
+                        const forId = input.getAttribute('id');
+                        if (forId) {
+                            const newId = forId.replace(/Pagos_\d+/g, `Pagos_${indice}`);
+                            input.setAttribute('id', newId);
+                        }
+                    });
+
+                    const labels = row.querySelectorAll('label');
+                    labels.forEach(label => {
+                        const forAttr = label.getAttribute('for');
+                        if (forAttr) {
+                            const newFor = forAttr.replace(/Pagos_\d+/g, `Pagos_${indice}`);
+                            label.setAttribute('for', newFor);
+                        }
+                    });
+
+                    const spans = row.querySelectorAll('span[data-valmsg-for]');
+                    spans.forEach(span => {
+                        const valFor = span.getAttribute('data-valmsg-for');
+                        if (valFor) {
+                            const newValFor = valFor.replace(/Pagos_\d+/g, `Pagos_${indice}`);
+                            span.setAttribute('data-valmsg-for', newValFor);
+                        }
+                    });
+                });
+            }
+
+            btnAgregar.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const ultimaFila = container.querySelector('.pago-row:last-child');
+                let nuevoIndice = 0;
+                if (ultimaFila) {
+                    nuevoIndice = parseInt(ultimaFila.getAttribute('data-pago-index')) + 1;
+                }
+
+                const htmlNuevaFila = `
+                    <div class="pago-row card mb-3 shadow-sm" data-pago-index="${nuevoIndice}">
+                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                            <span class="fw-bold text-muted">Línea de Pago #<span class="numero-linea">${nuevoIndice + 1}</span></span>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar" aria-label="Eliminar línea de pago" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="Pagos_${nuevoIndice}__MedioPagoId" class="form-label fw-semibold">Medio de Pago</label>
+                                    <select name="Pagos[${nuevoIndice}].MedioPagoId" id="Pagos_${nuevoIndice}__MedioPagoId" class="form-select select-medio-pago" required>
+                                        <option value="">-- Seleccionar Medio --</option>
+                                    </select>
+                                    <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__MedioPagoId"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="Pagos_${nuevoIndice}__Importe" class="form-label fw-semibold">Importe</label>
+                                    <input type="number" name="Pagos[${nuevoIndice}].Importe" id="Pagos_${nuevoIndice}__Importe" step="0.01" min="0.01" class="form-control input-importe" placeholder="0.00" required />
+                                    <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__Importe"></span>
+                                </div>
+
+                                <div class="col-12 bloque-cheque" style="display: none;">
+                                    <div class="border-start border-4 border-info ps-3 py-2">
+                                        <h6 class="text-info mb-3"><i class="bi bi-info-circle"></i> Datos del Cheque</h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="Pagos_${nuevoIndice}__ChequeNumero" class="form-label">Número de Cheque</label>
+                                                <input type="text" name="Pagos[${nuevoIndice}].ChequeNumero" id="Pagos_${nuevoIndice}__ChequeNumero" class="form-control" placeholder="Ej: 123456" />
+                                                <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__ChequeNumero"></span>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="Pagos_${nuevoIndice}__ChequeBanco" class="form-label">Banco</label>
+                                                <input type="text" name="Pagos[${nuevoIndice}].ChequeBanco" id="Pagos_${nuevoIndice}__ChequeBanco" class="form-control" placeholder="Ej: Banco Nación" />
+                                                <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__ChequeBanco"></span>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="Pagos_${nuevoIndice}__ChequeTitular" class="form-label">Titular</label>
+                                                <input type="text" name="Pagos[${nuevoIndice}].ChequeTitular" id="Pagos_${nuevoIndice}__ChequeTitular" class="form-control" placeholder="Nombre del titular" />
+                                                <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__ChequeTitular"></span>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label for="Pagos_${nuevoIndice}__ChequeFechaEmision" class="form-label">Fecha de Emisión</label>
+                                                <input type="date" name="Pagos[${nuevoIndice}].ChequeFechaEmision" id="Pagos_${nuevoIndice}__ChequeFechaEmision" class="form-control" />
+                                                <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__ChequeFechaEmision"></span>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label for="Pagos_${nuevoIndice}__ChequeFechaCobro" class="form-label">Fecha de Cobro</label>
+                                                <input type="date" name="Pagos[${nuevoIndice}].ChequeFechaCobro" id="Pagos_${nuevoIndice}__ChequeFechaCobro" class="form-control" />
+                                                <span class="text-danger small d-block mt-1" data-valmsg-for="Pagos_${nuevoIndice}__ChequeFechaCobro"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.insertAdjacentHTML('beforeend', htmlNuevaFila);
+
+                const nuevaFila = container.querySelector(`.pago-row[data-pago-index="${nuevoIndice}"]`);
+                inicializarPagoRow(nuevaFila);
+
+                const selectNuevo = nuevaFila.querySelector('.select-medio-pago');
+                const selectExistente = document.querySelector('.select-medio-pago');
+                if (selectNuevo && selectExistente) {
+                    selectNuevo.innerHTML = selectExistente.innerHTML;
+                    selectNuevo.value = '';
+                }
+            });
+        });
+    </script>
 }

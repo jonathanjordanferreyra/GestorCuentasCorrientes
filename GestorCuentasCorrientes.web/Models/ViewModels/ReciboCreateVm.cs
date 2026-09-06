@@ -6,9 +6,12 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
 {
     public class PagoLineaVm
     {
+        [Required(ErrorMessage = "El medio de pago es obligatorio")]
         [Display(Name = "Medio de Pago")]
         public int MedioPagoId { get; set; }
 
+        [Required(ErrorMessage = "El importe es obligatorio")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "El importe debe ser mayor a 0")]
         [Display(Name = "Importe")]
         public decimal Importe { get; set; }
 

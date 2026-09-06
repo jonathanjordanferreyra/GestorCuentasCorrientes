@@ -12,6 +12,7 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
         [Display(Name = "Cliente")]
         public string? ClienteNombre { get; set; } 
 
+        [Required(ErrorMessage = "El tipo de movimiento es obligatorio")]
         [Display(Name = "Tipo de Movimiento")]
         public int TipoMovimientoId { get; set; }
 
