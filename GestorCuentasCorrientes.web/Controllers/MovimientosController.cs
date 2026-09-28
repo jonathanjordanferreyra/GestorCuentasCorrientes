@@ -96,18 +96,31 @@ namespace GestorCuentasCorrientes.web.Controllers
             {
                 System.Diagnostics.Debug.WriteLine("🟡 Es movimiento SIMPLE, limpiando lista de Pagos");
                 viewModel.Pagos = new List<PagoLineaVm>();
+
+                // FIX: vaciar la lista en C# no borra los errores que el model
+                // binding ya había agregado al ModelState para Pagos[0].Importe
+                // (u otros campos de PagoLineaVm) antes de que esta acción empiece
+                // a correr. Sin esto, un movimiento simple queda "inválido" por
+                // culpa de campos que ni le corresponden. Mismo criterio que el
+                // ModelState.Remove(Importe) de la rama REC de arriba.
+                var clavesPagos = ModelState.Keys.Where(k => k.StartsWith("Pagos[")).ToList();
+                foreach (var clave in clavesPagos)
+                    ModelState.Remove(clave);
             }
 
             if (!ModelState.IsValid)
             {
-                System.Diagnostics.Debug.WriteLine("🔴 ModelState no válido. Errores:");
-                foreach (var modelState in ModelState.Values)
-                {
-                    foreach (var error in modelState.Errors)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"   - {error.ErrorMessage}");
-                    }
-                }
+                var errores = ModelState
+        .Where(kvp => kvp.Value?.Errors.Count > 0)
+        .Select(kvp => new
+        {
+            Campo = kvp.Key,
+            Mensajes = kvp.Value!.Errors.Select(e => e.ErrorMessage)
+        })
+        .ToList();
+
+                foreach (var e in errores)
+                    Console.WriteLine($"[MODELSTATE ERROR] {e.Campo}: {string.Join(" | ", e.Mensajes)}");
 
                 // Reconstruir el nombre del cliente (es de solo lectura, no viaja en el POST)
                 var clientePreseleccionado = await _context.Clientes.FindAsync(viewModel.ClienteId);
@@ -515,7 +528,7 @@ namespace GestorCuentasCorrientes.web.Controllers
                 new { id = viewModel.ClienteId });
         }
 
-            
+
         // GET: Movimientos/PruebaPdf
         public IActionResult PruebaPdf()
         {
