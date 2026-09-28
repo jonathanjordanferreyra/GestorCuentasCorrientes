@@ -1,8 +1,157 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+
+    <!-- Encabezado -->
+    <div class="mb-5">
+        <h1 class="display-6 fw-bold">
+            Gestor de Cuentas
+        </h1>
+
+        <p class="text-muted fs-5 mb-0">
+            Administración de cuentas corrientes y gestión comercial.
+        </p>
+    </div>
+
+
+    <!-- Módulos principales -->
+    <div class="row g-4">
+
+        <!-- Cuentas Corrientes -->
+        <div class="col-md-6">
+
+            <div class="card h-100 border-0 shadow-sm">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex align-items-center mb-3">
+
+                        <div class="bg-primary text-white rounded-3 p-3 me-3">
+                            <span class="fs-3">💰</span>
+                        </div>
+
+                        <div>
+                            <h2 class="h4 mb-1">
+                                Cuentas Corrientes
+                            </h2>
+
+                            <span class="text-muted">
+                                Gestión de clientes y movimientos
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <p class="text-muted">
+                        Administrá las cuentas corrientes de los clientes,
+                        registrá movimientos, recibos, pagos, cheques,
+                        e-cheques y comprobantes.
+                    </p>
+
+                    <div class="mt-4">
+
+                        <a asp-controller="Clientes"
+                           asp-action="Index"
+                           class="btn btn-primary">
+                            Ingresar
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Presupuestos -->
+        <div class="col-md-6">
+
+            <div class="card h-100 border-0 shadow-sm">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex align-items-center mb-3">
+
+                        <div class="bg-secondary text-white rounded-3 p-3 me-3">
+                            <span class="fs-3">📄</span>
+                        </div>
+
+                        <div>
+                            <h2 class="h4 mb-1">
+                                Presupuestos
+                            </h2>
+
+                            <span class="text-muted">
+                                Gestión de presupuestos
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <p class="text-muted">
+                        Creá presupuestos para los clientes, generá
+                        comprobantes en PDF y gestioná su posterior
+                        aprobación.
+                    </p>
+
+                    <div class="mt-4">
+
+                        <button type="button"
+                                class="btn btn-secondary"
+                                disabled>
+                            Próximamente
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Acceso rápido -->
+    <div class="mt-5">
+
+        <h2 class="h5 fw-bold mb-3">
+            Acceso rápido
+        </h2>
+
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h3 class="h6 mb-1">
+                            Clientes
+                        </h3>
+
+                        <p class="text-muted mb-0">
+                            Consultá y administrá los clientes registrados.
+                        </p>
+                    </div>
+
+                    <a asp-controller="Clientes"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ver clientes
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>

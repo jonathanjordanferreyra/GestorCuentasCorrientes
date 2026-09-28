@@ -514,7 +514,6 @@ namespace GestorCuentasCorrientes.web.Controllers
                 "Clientes",
                 new { id = viewModel.ClienteId });
         }
-            
 
             
         // GET: Movimientos/PruebaPdf
