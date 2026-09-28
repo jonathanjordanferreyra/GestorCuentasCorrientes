@@ -3,7 +3,10 @@ using GestorCuentasCorrientes.web.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using QuestPDF.Infrastructure;
+using GestorCuentasCorrientes.web.Services;
 
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -40,6 +43,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+builder.Services.AddScoped<ReciboPdfService>();
 //Definir la cultura predeterminada para toda la aplicación (es-AR) para moneda, fechas y otros formatos regionales
 var culturaArgentina = new CultureInfo("es-AR");
 CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;

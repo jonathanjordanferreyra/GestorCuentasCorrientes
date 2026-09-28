@@ -1,11 +1,15 @@
 using GestorCuentasCorrientes.web.Data;
 using GestorCuentasCorrientes.web.Models;
 using GestorCuentasCorrientes.web.Models.ViewModels;
+using GestorCuentasCorrientes.web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using System.Security.Claims;
 
 namespace GestorCuentasCorrientes.web.Controllers
@@ -16,16 +20,20 @@ namespace GestorCuentasCorrientes.web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<Usuario> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ReciboPdfService _reciboPdfService;
 
         public MovimientosController(
             ApplicationDbContext context,
             UserManager<Usuario> userManager,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ReciboPdfService reciboPdfService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _reciboPdfService = reciboPdfService;
         }
+
 
         // GET: Movimientos/Create
         public async Task<IActionResult> Create(int clienteId)
@@ -371,6 +379,7 @@ namespace GestorCuentasCorrientes.web.Controllers
 
                 // Si el medio de pago es Cheque o E-cheque, crear registro de Cheque
                 var nombreMedio = mediosPago.GetValueOrDefault(linea.MedioPagoId);
+
                 if (nombreMedio is "Cheque" or "E-cheque")
                 {
                     var cheque = new Cheque
@@ -389,36 +398,163 @@ namespace GestorCuentasCorrientes.web.Controllers
                 }
             }
 
-            // Guardar archivo comprobante si lo hay
-            if (viewModel.ArchivoComprobante != null && viewModel.ArchivoComprobante.Length > 0)
+
+            // ============================================
+            // GENERAR PDF AUTOMÁTICO DEL RECIBO
+            // ============================================
+
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.Id == viewModel.ClienteId);
+
+            if (cliente == null)
             {
-                var appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "App_Data", "Comprobantes", movimiento.Id.ToString());
-                Directory.CreateDirectory(appDataPath);
+                return NotFound();
+            }
 
-                var fileName = Path.GetFileName(viewModel.ArchivoComprobante.FileName);
-                var filePath = Path.Combine(appDataPath, fileName);
+            var pdf = _reciboPdfService.GenerarPdf(
+                viewModel,
+                cliente,
+                mediosPago,
+                movimiento.Id);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+
+            // ============================================
+            // GUARDAR PDF EN APP_DATA
+            // ============================================
+
+            var appDataPath = Path.Combine(
+                _webHostEnvironment.ContentRootPath,
+                "App_Data",
+                "Comprobantes",
+                movimiento.Id.ToString());
+
+            Directory.CreateDirectory(appDataPath);
+
+            var fileName = $"Recibo_{movimiento.Id}.pdf";
+
+            var filePath = Path.Combine(appDataPath, fileName);
+
+            await System.IO.File.WriteAllBytesAsync(filePath, pdf);
+
+
+            // ============================================
+            // REGISTRAR PDF EN LA TABLA COMPROBANTES
+            // ============================================
+
+            var rutaRelativa = Path.Combine(
+                "App_Data",
+                "Comprobantes",
+                movimiento.Id.ToString(),
+                fileName);
+
+            var comprobantePdf = new Comprobante
+            {
+                MovimientoId = movimiento.Id,
+                NombreArchivo = fileName,
+                RutaArchivo = rutaRelativa,
+                TipoArchivo = "pdf",
+                FechaCarga = DateTime.Now
+            };
+
+            _context.Comprobantes.Add(comprobantePdf);
+
+            await _context.SaveChangesAsync();
+
+
+            // ============================================
+            // ARCHIVO MANUAL OPCIONAL
+            // ============================================
+
+            if (viewModel.ArchivoComprobante != null &&
+                viewModel.ArchivoComprobante.Length > 0)
+            {
+                var appDataPathManual = Path.Combine(
+                    _webHostEnvironment.ContentRootPath,
+                    "App_Data",
+                    "Comprobantes",
+                    movimiento.Id.ToString());
+
+                Directory.CreateDirectory(appDataPathManual);
+
+                var fileNameManual =
+                    Path.GetFileName(viewModel.ArchivoComprobante.FileName);
+
+                var filePathManual =
+                    Path.Combine(appDataPathManual, fileNameManual);
+
+                using (var stream = new FileStream(
+                    filePathManual,
+                    FileMode.Create))
                 {
                     await viewModel.ArchivoComprobante.CopyToAsync(stream);
                 }
 
-                var rutaRelativa = Path.Combine("App_Data", "Comprobantes", movimiento.Id.ToString(), fileName);
+                var rutaRelativaManual = Path.Combine(
+                    "App_Data",
+                    "Comprobantes",
+                    movimiento.Id.ToString(),
+                    fileNameManual);
 
-                var comprobante = new Comprobante
+                var comprobanteManual = new Comprobante
                 {
                     MovimientoId = movimiento.Id,
-                    NombreArchivo = fileName,
-                    RutaArchivo = rutaRelativa,
-                    TipoArchivo = Path.GetExtension(fileName).TrimStart('.'),
+                    NombreArchivo = fileNameManual,
+                    RutaArchivo = rutaRelativaManual,
+                    TipoArchivo = Path.GetExtension(fileNameManual).TrimStart('.'),
                     FechaCarga = DateTime.Now
                 };
 
-                _context.Comprobantes.Add(comprobante);
+                _context.Comprobantes.Add(comprobanteManual);
+
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction("Details", "Clientes", new { id = viewModel.ClienteId });
+            return RedirectToAction(
+                "Details",
+                "Clientes",
+                new { id = viewModel.ClienteId });
+        }
+            
+
+            
+        // GET: Movimientos/PruebaPdf
+        public IActionResult PruebaPdf()
+        {
+            var pdf = Document.Create(document =>
+            {
+                document.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(2, Unit.Centimetre);
+
+                    page.Content()
+                        .Column(column =>
+                        {
+                            column.Spacing(15);
+
+                            column.Item()
+                                .AlignCenter()
+                                .Text("GESTOR DE CUENTAS")
+                                .Bold()
+                                .FontSize(24);
+
+                            column.Item()
+                                .AlignCenter()
+                                .Text("PDF DE PRUEBA")
+                                .FontSize(18);
+
+                            column.Item()
+                                .Text("Este documento fue generado correctamente utilizando QuestPDF.")
+                                .FontSize(12);
+
+                            column.Item()
+                                .Text($"Fecha de generación: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                                .FontSize(12);
+                        });
+                });
+            }).GeneratePdf();
+
+            return File(pdf, "application/pdf", "Prueba.pdf");
         }
 
         // GET: Movimientos/VerComprobante/5
