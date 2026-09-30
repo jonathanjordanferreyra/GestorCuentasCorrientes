@@ -19,6 +19,9 @@ namespace GestorCuentasCorrientes.web.Data
         public DbSet<Pago> Pagos { get; set; }
         public DbSet<Cheque> Cheques { get; set; }
         public DbSet<Comprobante> Comprobantes { get; set; }
+        //Agrego 2 nuevas tablas 30/09 para la nueva funcionalidad.
+        public DbSet<Presupuesto> Presupuestos { get; set; }
+        public DbSet<PresupuestoDetalle> PresupuestoDetalles { get; set; }
 
         //fluent API configurations
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -230,6 +233,42 @@ namespace GestorCuentasCorrientes.web.Data
                     .WithMany(m => m.Comprobantes)
                     .HasForeignKey(e => e.MovimientoId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+            // ===== PRESUPUESTO =====
+            modelBuilder.Entity<Presupuesto>(entity =>
+            {
+                // Mismo patrón que usaste en Cheques: string + CHECK, no tabla aparte
+                entity.ToTable(tb => tb.HasCheckConstraint("CK_Presupuestos_Estado",
+                    "[Estado] IN ('Pendiente', 'Aprobado', 'Rechazado', 'Anulado')"));
+
+                // Restrict: igual criterio que en Movimiento — nunca querés que borrar
+                // un Cliente o un Usuario arrastre presupuestos históricos.
+                entity.HasOne(p => p.Cliente)
+                    .WithMany()
+                    .HasForeignKey(p => p.ClienteId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.Usuario)
+                    .WithMany()
+                    .HasForeignKey(p => p.UsuarioId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<PresupuestoDetalle>(entity =>
+            {
+                entity.Property(d => d.Cantidad)
+                    .HasPrecision(18, 3);
+
+                entity.Property(d => d.PrecioUnitario)
+                    .HasPrecision(18, 2);
+
+                entity.HasOne(d => d.Presupuesto)
+                    .WithMany(p => p.Detalles)
+                    .HasForeignKey(d => d.PresupuestoId);
+
+                // Sin Restrict acá a propósito: como nunca vas a tener un DELETE real de
+                // Presupuesto desde la app (solo "Anular"), no hace falta bloquear el
+                // cascade.
             });
         }
     }
