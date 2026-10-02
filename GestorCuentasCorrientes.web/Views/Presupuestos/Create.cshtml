@@ -1,0 +1,500 @@
+﻿@model GestorCuentasCorrientes.web.Models.ViewModels.PresupuestoCreateVm
+
+@{
+    ViewData["Title"] = "Nuevo Presupuesto";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>Nuevo Presupuesto</h2>
+
+        <a asp-controller="Clientes"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Volver
+        </a>
+
+    </div>
+
+    <form asp-action="Create" method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger mb-3">
+        </div>
+
+        <!-- DATOS GENERALES -->
+
+        <div class="card mb-4">
+
+            <div class="card-header">
+                <strong>Datos del presupuesto</strong>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label asp-for="ClienteId"
+                               class="form-label">
+                        </label>
+
+                        <select asp-for="ClienteId"
+                                asp-items="ViewBag.ClienteId"
+                                class="form-select">
+
+                            <option value="">
+                                -- Seleccione un cliente --
+                            </option>
+
+                        </select>
+
+                        <span asp-validation-for="ClienteId"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label asp-for="Fecha"
+                               class="form-label">
+                        </label>
+
+                        <input asp-for="Fecha"
+                               class="form-control" />
+
+                        <span asp-validation-for="Fecha"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Observaciones"
+                           class="form-label">
+                    </label>
+
+                    <textarea asp-for="Observaciones"
+                              class="form-control"
+                              rows="3">
+                    </textarea>
+
+                    <span asp-validation-for="Observaciones"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CONCEPTOS -->
+
+        <div class="card mb-4">
+
+            <div class="card-header d-flex justify-content-between align-items-center">
+
+                <strong>Conceptos</strong>
+
+                <button type="button"
+                        id="btnAgregarDetalle"
+                        class="btn btn-primary btn-sm">
+
+                    + Agregar concepto
+
+                </button>
+
+            </div>
+
+            <div class="card-body">
+
+                <div asp-validation-for="Detalles"
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-bordered align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th style="width: 40%">
+                                    Descripción
+                                </th>
+
+                                <th style="width: 15%">
+                                    Cantidad
+                                </th>
+
+                                <th style="width: 20%">
+                                    Precio Unitario
+                                </th>
+
+                                <th style="width: 15%">
+                                    Subtotal
+                                </th>
+
+                                <th style="width: 10%">
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="detallesContainer">
+
+                            @for (int i = 0; i < Model.Detalles.Count; i++)
+                            {
+                                <tr class="detalle-row">
+
+                                    <td>
+
+                                        <input type="text"
+                                               name="Detalles[@i].Descripcion"
+                                               value="@Model.Detalles[i].Descripcion"
+                                               class="form-control"
+                                               maxlength="200" />
+
+                                    </td>
+
+                                    <td>
+
+                                        <input type="number"
+                                               name="Detalles[@i].Cantidad"
+                                               value="@Model.Detalles[i].Cantidad"
+                                               class="form-control cantidad"
+                                               min="0.01"
+                                               step="0.001" />
+
+                                    </td>
+
+                                    <td>
+
+                                        <input type="number"
+                                               name="Detalles[@i].PrecioUnitario"
+                                               value="@Model.Detalles[i].PrecioUnitario"
+                                               class="form-control precio"
+                                               min="0.01"
+                                               step="0.01" />
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="subtotal">
+                                            $0,00
+                                        </span>
+
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm btnEliminarDetalle">
+
+                                            Eliminar
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="text-end mt-3">
+
+                    <h4>
+
+                        Total:
+
+                        <span id="totalPresupuesto">
+                            $0,00
+                        </span>
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- BOTONES -->
+
+        <div class="d-flex justify-content-end gap-2">
+
+            <a asp-controller="Clientes"
+               asp-action="Index"
+               class="btn btn-secondary">
+
+                Cancelar
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-success">
+
+                Guardar presupuesto
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        function actualizarIndices() {
+
+            const filas =
+                document.querySelectorAll(".detalle-row");
+
+            filas.forEach((fila, index) => {
+
+                fila.querySelectorAll("input").forEach(input => {
+
+                    const name =
+                        input.getAttribute("name");
+
+                    if (!name)
+                        return;
+
+                    const nuevoName =
+                        name.replace(
+                            /Detalles\[\d+\]/,
+                            `Detalles[${index}]`
+                        );
+
+                    input.setAttribute(
+                        "name",
+                        nuevoName
+                    );
+
+                });
+
+            });
+        }
+
+
+        function actualizarTotales() {
+
+            let total = 0;
+
+            document
+                .querySelectorAll(".detalle-row")
+                .forEach(fila => {
+
+                    const cantidad =
+                        parseFloat(
+                            fila.querySelector(".cantidad")?.value
+                        ) || 0;
+
+                    const precio =
+                        parseFloat(
+                            fila.querySelector(".precio")?.value
+                        ) || 0;
+
+                    const subtotal =
+                        cantidad * precio;
+
+                    total += subtotal;
+
+                    const subtotalElemento =
+                        fila.querySelector(".subtotal");
+
+                    if (subtotalElemento) {
+
+                        subtotalElemento.textContent =
+                            subtotal.toLocaleString(
+                                "es-AR",
+                                {
+                                    style: "currency",
+                                    currency: "ARS"
+                                }
+                            );
+
+                    }
+
+                });
+
+
+            document.getElementById(
+                "totalPresupuesto"
+            ).textContent =
+                total.toLocaleString(
+                    "es-AR",
+                    {
+                        style: "currency",
+                        currency: "ARS"
+                    }
+                );
+        }
+
+
+        document.getElementById(
+            "btnAgregarDetalle"
+        ).addEventListener(
+            "click",
+            function () {
+
+                const container =
+                    document.getElementById(
+                        "detallesContainer"
+                    );
+
+                const index =
+                    container.querySelectorAll(
+                        ".detalle-row"
+                    ).length;
+
+                const fila =
+                    document.createElement("tr");
+
+                fila.classList.add(
+                    "detalle-row"
+                );
+
+                fila.innerHTML = `
+
+                    <td>
+
+                        <input type="text"
+                               name="Detalles[${index}].Descripcion"
+                               class="form-control"
+                               maxlength="200" />
+
+                    </td>
+
+                    <td>
+
+                        <input type="number"
+                               name="Detalles[${index}].Cantidad"
+                               class="form-control cantidad"
+                               value="1"
+                               min="0.01"
+                               step="0.001" />
+
+                    </td>
+
+                    <td>
+
+                        <input type="number"
+                               name="Detalles[${index}].PrecioUnitario"
+                               class="form-control precio"
+                               value="0"
+                               min="0.01"
+                               step="0.01" />
+
+                    </td>
+
+                    <td>
+
+                        <span class="subtotal">
+                            $0,00
+                        </span>
+
+                    </td>
+
+                    <td class="text-center">
+
+                        <button type="button"
+                                class="btn btn-danger btn-sm btnEliminarDetalle">
+
+                            Eliminar
+
+                        </button>
+
+                    </td>
+                `;
+
+                container.appendChild(fila);
+
+                actualizarIndices();
+                actualizarTotales();
+
+            }
+        );
+
+
+        document.addEventListener(
+            "click",
+            function (e) {
+
+                if (!e.target.classList.contains(
+                    "btnEliminarDetalle"
+                ))
+                    return;
+
+                const filas =
+                    document.querySelectorAll(
+                        ".detalle-row"
+                    );
+
+                if (filas.length <= 1) {
+
+                    alert(
+                        "El presupuesto debe tener al menos un concepto."
+                    );
+
+                    return;
+                }
+
+                e.target
+                    .closest(".detalle-row")
+                    .remove();
+
+                actualizarIndices();
+                actualizarTotales();
+
+            }
+        );
+
+
+        document.addEventListener(
+            "input",
+            function (e) {
+
+                if (
+                    e.target.classList.contains("cantidad") ||
+                    e.target.classList.contains("precio")
+                ) {
+
+                    actualizarTotales();
+
+                }
+
+            }
+        );
+
+
+        actualizarTotales();
+
+    </script>
+}

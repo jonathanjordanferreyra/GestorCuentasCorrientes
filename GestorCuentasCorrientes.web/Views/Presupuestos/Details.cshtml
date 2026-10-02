@@ -1,0 +1,242 @@
+﻿@model GestorCuentasCorrientes.web.Models.Presupuesto
+
+@{
+    ViewData["Title"] = "Detalle del Presupuesto";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>
+                Presupuesto N.º @Model.Id
+            </h2>
+
+            <span class="badge bg-secondary">
+                @Model.Estado
+            </span>
+
+        </div>
+
+        <a asp-controller="Clientes"
+           asp-action="Details"
+           asp-route-id="@Model.ClienteId"
+           class="btn btn-secondary">
+
+            Volver al cliente
+
+        </a>
+
+    </div>
+
+
+    <!-- DATOS GENERALES -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+            <strong>Datos del presupuesto</strong>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-4">
+
+                    <strong>Número:</strong>
+
+                    <p>
+                        @Model.Id
+                    </p>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <strong>Fecha:</strong>
+
+                    <p>
+                        @Model.Fecha.ToString("dd/MM/yyyy")
+                    </p>
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <strong>Cliente:</strong>
+
+                    <p>
+                        @Model.Cliente?.RazonSocial
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <strong>Usuario:</strong>
+
+                    <p>
+                        @Model.Usuario?.Nombre
+                        @Model.Usuario?.Apellido
+                    </p>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <strong>Fecha de registro:</strong>
+
+                    <p>
+                        @Model.FechaRegistro.ToString(
+                            "dd/MM/yyyy HH:mm")
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            @if (!string.IsNullOrWhiteSpace(Model.Observaciones))
+            {
+                <div>
+
+                    <strong>Observaciones:</strong>
+
+                    <p>
+                        @Model.Observaciones
+                    </p>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- CONCEPTOS -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <strong>Conceptos</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                #
+                            </th>
+
+                            <th>
+                                Descripción
+                            </th>
+
+                            <th class="text-end">
+                                Cantidad
+                            </th>
+
+                            <th class="text-end">
+                                Precio Unitario
+                            </th>
+
+                            <th class="text-end">
+                                Subtotal
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @{
+                            decimal total = 0;
+                            int numeroLinea = 1;
+                        }
+
+                        @foreach (var detalle in Model.Detalles)
+                        {
+                            var subtotal =
+                                detalle.Cantidad *
+                                detalle.PrecioUnitario;
+
+                            total += subtotal;
+
+                            <tr>
+
+                                <td>
+                                    @numeroLinea
+                                </td>
+
+                                <td>
+                                    @detalle.Descripcion
+                                </td>
+
+                                <td class="text-end">
+                                    @detalle.Cantidad
+                                </td>
+
+                                <td class="text-end">
+                                    @detalle.PrecioUnitario.ToString("C2")
+                                </td>
+
+                                <td class="text-end">
+                                    @subtotal.ToString("C2")
+                                </td>
+
+                            </tr>
+
+                            numeroLinea++;
+                        }
+
+                    </tbody>
+
+                    <tfoot>
+
+                        <tr>
+
+                            <th colspan="4"
+                                class="text-end">
+
+                                TOTAL
+
+                            </th>
+
+                            <th class="text-end">
+
+                                @total.ToString("C2")
+
+                            </th>
+
+                        </tr>
+
+                    </tfoot>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
