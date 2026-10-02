@@ -22,6 +22,8 @@ namespace GestorCuentasCorrientes.web.Data
         //Agrego 2 nuevas tablas 30/09 para la nueva funcionalidad.
         public DbSet<Presupuesto> Presupuestos { get; set; }
         public DbSet<PresupuestoDetalle> PresupuestoDetalles { get; set; }
+        //Agrego nueva tabla 2/10 para tener precios y productos en la base de datos.
+        public DbSet<Producto> Productos { get; set; }
 
         //fluent API configurations
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -269,6 +271,13 @@ namespace GestorCuentasCorrientes.web.Data
                 // Sin Restrict acá a propósito: como nunca vas a tener un DELETE real de
                 // Presupuesto desde la app (solo "Anular"), no hace falta bloquear el
                 // cascade.
+            });
+
+            // ===== PRODUCTO =====
+            modelBuilder.Entity<Producto>(entity =>
+            {
+                entity.Property(p => p.PrecioUnitario)
+                    .HasPrecision(18, 2);
             });
         }
     }

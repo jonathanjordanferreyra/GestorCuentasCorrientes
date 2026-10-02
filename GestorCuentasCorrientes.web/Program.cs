@@ -61,6 +61,7 @@ using (var scope = app.Services.CreateScope())
     await SeedRolesAsync(roleManager);
     await SeedUsersAsync(userManager);
     await SeedLocalidadesAsync(context);
+    await SeedProductosAsync(context);
 }
 
 // Configure the HTTP request pipeline.
@@ -164,3 +165,125 @@ async Task SeedLocalidadesAsync(ApplicationDbContext context)
     context.Localidades.AddRange(localidades);
     await context.SaveChangesAsync();
 }
+async Task SeedProductosAsync(ApplicationDbContext context)
+{
+    // Verificar si ya existen productos
+    if (context.Productos.Any())
+    {
+        return;
+    }
+
+    var productos = new[]
+    {
+        new Producto
+        {
+            Nombre = "Cemento 50 kg",
+            PrecioUnitario = 12500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Arena por m³",
+            PrecioUnitario = 28000m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Piedra por m³",
+            PrecioUnitario = 35000m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Ladrillo común",
+            PrecioUnitario = 450m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Bloque de hormigón",
+            PrecioUnitario = 1800m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Cal 25 kg",
+            PrecioUnitario = 6500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Hierro 8 mm x 12 m",
+            PrecioUnitario = 9500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Hierro 10 mm x 12 m",
+            PrecioUnitario = 14500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Pintura látex 20 litros",
+            PrecioUnitario = 42000m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Pegamento para cerámicos 30 kg",
+            PrecioUnitario = 8500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Cerámico 50x50 cm",
+            PrecioUnitario = 12500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Tornillos x 100 unidades",
+            PrecioUnitario = 4500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Cable eléctrico 2,5 mm² x 100 m",
+            PrecioUnitario = 38000m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Tomacorriente",
+            PrecioUnitario = 3500m,
+            Activo = true
+        },
+
+        new Producto
+        {
+            Nombre = "Mano de obra",
+            PrecioUnitario = 25000m,
+            Activo = true
+        }
+    };
+
+    context.Productos.AddRange(productos);
+
+    await context.SaveChangesAsync();
+}
+
+

@@ -15,96 +15,47 @@
         </p>
     </div>
 
-
     <!-- Módulos principales -->
-    <div class="row g-4">
+<div class="row g-4">
 
-        <!-- Cuentas Corrientes -->
-        <div class="col-md-6">
+    <!-- Cuentas Corrientes -->
+    <div class="col-md-4">
 
-            <div class="card h-100 border-0 shadow-sm">
+        <div class="card h-100 border-0 shadow-sm">
 
-                <div class="card-body p-4">
+            <div class="card-body p-4">
 
-                    <div class="d-flex align-items-center mb-3">
+                <div class="d-flex align-items-center mb-3">
 
-                        <div class="bg-primary text-white rounded-3 p-3 me-3">
-                            <span class="fs-3">💰</span>
-                        </div>
-
-                        <div>
-                            <h2 class="h4 mb-1">
-                                Cuentas Corrientes
-                            </h2>
-
-                            <span class="text-muted">
-                                Gestión de clientes y movimientos
-                            </span>
-                        </div>
-
+                    <div class="bg-primary text-white rounded-3 p-3 me-3">
+                        <span class="fs-3">💰</span>
                     </div>
 
-                    <p class="text-muted">
-                        Administrá las cuentas corrientes de los clientes,
-                        registrá movimientos, recibos, pagos, cheques,
-                        e-cheques y comprobantes.
-                    </p>
+                    <div>
+                        <h2 class="h4 mb-1">
+                            Cuentas Corrientes
+                        </h2>
 
-                    <div class="mt-4">
-
-                        <a asp-controller="Clientes"
-                           asp-action="Index"
-                           class="btn btn-primary">
-                            Ingresar
-                        </a>
-
+                        <span class="text-muted">
+                            Gestión de clientes y movimientos
+                        </span>
                     </div>
 
                 </div>
 
-            </div>
+                <p class="text-muted">
+                    Administrá las cuentas corrientes de los clientes,
+                    registrá movimientos, recibos, pagos, cheques,
+                    e-cheques y comprobantes.
+                </p>
 
-        </div>
+                <div class="mt-4">
 
-
-        <!-- Presupuestos -->
-        <div class="col-md-6">
-
-            <div class="card h-100 border-0 shadow-sm">
-
-                <div class="card-body p-4">
-
-                    <div class="d-flex align-items-center mb-3">
-
-                        <div class="bg-secondary text-white rounded-3 p-3 me-3">
-                            <span class="fs-3">📄</span>
-                        </div>
-
-                        <div>
-                            <h2 class="h4 mb-1">
-                                Presupuestos
-                            </h2>
-
-                            <span class="text-muted">
-                                Gestión de presupuestos
-                            </span>
-                        </div>
-
-                    </div>
-
-                    <p class="text-muted">
-                        Creá presupuestos para los clientes, generá
-                        comprobantes en PDF y gestioná su posterior
-                        aprobación.
-                    </p>
-
-                    <div class="mt-4">
-                        <a asp-controller="Presupuestos"
-                           asp-action="Create"
-                           class="btn btn-secondary">
-                            Crear presupuesto
-                        </a>
-                    </div>
+                    <a asp-controller="Clientes"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                        Ingresar
+                    </a>
 
                 </div>
 
@@ -113,6 +64,103 @@
         </div>
 
     </div>
+
+
+    <!-- Presupuestos -->
+    <div class="col-md-4">
+
+        <div class="card h-100 border-0 shadow-sm">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center mb-3">
+
+                    <div class="bg-secondary text-white rounded-3 p-3 me-3">
+                        <span class="fs-3">📄</span>
+                    </div>
+
+                    <div>
+                        <h2 class="h4 mb-1">
+                            Presupuestos
+                        </h2>
+
+                        <span class="text-muted">
+                            Gestión de presupuestos
+                        </span>
+                    </div>
+
+                </div>
+
+                <p class="text-muted">
+                    Creá presupuestos para los clientes, generá
+                    comprobantes en PDF y gestioná su posterior
+                    aprobación.
+                </p>
+
+                <div class="mt-4">
+
+                    <a asp-controller="Presupuestos"
+                       asp-action="Create"
+                       class="btn btn-secondary">
+                        Crear presupuesto
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Productos -->
+    <div class="col-md-4">
+
+        <div class="card h-100 border-0 shadow-sm">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center mb-3">
+
+                    <div class="bg-success text-white rounded-3 p-3 me-3">
+                        <span class="fs-3">📦</span>
+                    </div>
+
+                    <div>
+                        <h2 class="h4 mb-1">
+                            Productos
+                        </h2>
+
+                        <span class="text-muted">
+                            Productos y precios
+                        </span>
+                    </div>
+
+                </div>
+
+                <p class="text-muted">
+                    Administrá los productos disponibles y sus
+                    precios para utilizarlos en los presupuestos.
+                </p>
+
+                <div class="mt-4">
+
+                    <a asp-controller="Productos"
+                       asp-action="Index"
+                       class="btn btn-success">
+                        Ver productos
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 
 
     <!-- Acceso rápido -->
