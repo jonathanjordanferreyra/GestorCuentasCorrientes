@@ -24,6 +24,8 @@ namespace GestorCuentasCorrientes.web.Controllers
         }
 
         // GET: Presupuestos/Create
+
+        // GET: Presupuestos/Create
         public async Task<IActionResult> Create(int? clienteId)
         {
             var viewModel = new PresupuestoCreateVm
@@ -31,11 +33,12 @@ namespace GestorCuentasCorrientes.web.Controllers
                 Fecha = DateTime.Now
             };
 
-            // Si venimos desde un cliente, dejarlo preseleccionado
             if (clienteId.HasValue)
             {
                 var cliente = await _context.Clientes
-                    .FirstOrDefaultAsync(c => c.Id == clienteId.Value && c.Activo);
+                    .FirstOrDefaultAsync(c =>
+                        c.Id == clienteId.Value &&
+                        c.Activo);
 
                 if (cliente != null)
                 {
@@ -44,8 +47,8 @@ namespace GestorCuentasCorrientes.web.Controllers
             }
 
             await CargarClientes(viewModel.ClienteId);
+            await CargarProductos();
 
-            // Empezamos con una línea de detalle
             if (!viewModel.Detalles.Any())
             {
                 viewModel.Detalles.Add(new PresupuestoDetalleVm());
@@ -53,30 +56,25 @@ namespace GestorCuentasCorrientes.web.Controllers
 
             return View(viewModel);
         }
-
         // POST: Presupuestos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PresupuestoCreateVm viewModel)
         {
-            // Eliminar líneas completamente vacías
+            // Eliminar líneas sin producto o con cantidad inválida
             viewModel.Detalles = viewModel.Detalles?
-                .Where(d =>
-                    !string.IsNullOrWhiteSpace(d.Descripcion) ||
-                    d.Cantidad > 0 ||
-                    d.PrecioUnitario > 0)
+                .Where(d => d.ProductoId > 0 && d.Cantidad > 0)
                 .ToList()
                 ?? new List<PresupuestoDetalleVm>();
 
-            // Debe existir al menos un detalle
             if (!viewModel.Detalles.Any())
             {
                 ModelState.AddModelError(
                     "Detalles",
-                    "Debe agregar al menos un concepto al presupuesto.");
+                    "Debe agregar al menos un producto al presupuesto.");
             }
 
-            // Verificar que el cliente exista y esté activo
+            // Validar cliente
             var cliente = await _context.Clientes
                 .FirstOrDefaultAsync(c =>
                     c.Id == viewModel.ClienteId &&
@@ -89,9 +87,33 @@ namespace GestorCuentasCorrientes.web.Controllers
                     "El cliente no existe o está inactivo.");
             }
 
+            // Buscar todos los productos seleccionados
+            var productoIds = viewModel.Detalles
+                .Select(d => d.ProductoId)
+                .Distinct()
+                .ToList();
+
+            var productos = await _context.Productos
+                .Where(p =>
+                    productoIds.Contains(p.Id) &&
+                    p.Activo)
+                .ToDictionaryAsync(p => p.Id);
+
+            // Validar que todos los productos existan y estén activos
+            foreach (var detalleVm in viewModel.Detalles)
+            {
+                if (!productos.ContainsKey(detalleVm.ProductoId))
+                {
+                    ModelState.AddModelError(
+                        "Detalles",
+                        "Uno de los productos seleccionados no existe o está inactivo.");
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 await CargarClientes(viewModel.ClienteId);
+                await CargarProductos();
 
                 if (!viewModel.Detalles.Any())
                 {
@@ -101,7 +123,6 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return View(viewModel);
             }
 
-            // Obtener usuario actual
             var usuarioId = _userManager.GetUserId(User);
 
             if (string.IsNullOrEmpty(usuarioId))
@@ -111,11 +132,11 @@ namespace GestorCuentasCorrientes.web.Controllers
                     "No se pudo identificar al usuario.");
 
                 await CargarClientes(viewModel.ClienteId);
+                await CargarProductos();
 
                 return View(viewModel);
             }
 
-            // Crear presupuesto
             var presupuesto = new Presupuesto
             {
                 Fecha = viewModel.Fecha,
@@ -126,25 +147,24 @@ namespace GestorCuentasCorrientes.web.Controllers
                 UsuarioId = usuarioId
             };
 
-            // Crear detalles
             foreach (var detalleVm in viewModel.Detalles)
             {
+                var producto = productos[detalleVm.ProductoId];
+
                 var detalle = new PresupuestoDetalle
                 {
-                    Descripcion = detalleVm.Descripcion,
+                    Descripcion = producto.Nombre,
                     Cantidad = detalleVm.Cantidad,
-                    PrecioUnitario = detalleVm.PrecioUnitario
+                    PrecioUnitario = producto.PrecioUnitario
                 };
 
                 presupuesto.Detalles.Add(detalle);
             }
 
-            // Guardar presupuesto y detalles
             _context.Presupuestos.Add(presupuesto);
 
             await _context.SaveChangesAsync();
 
-            // El Id ya fue generado por SQL Server
             return RedirectToAction(
                 nameof(Details),
                 new { id = presupuesto.Id });
@@ -182,6 +202,15 @@ namespace GestorCuentasCorrientes.web.Controllers
                 "Id",
                 "RazonSocial",
                 clienteId);
+        }
+        private async Task CargarProductos()
+        {
+            var productos = await _context.Productos
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            ViewBag.Productos = productos;
         }
     }
 }

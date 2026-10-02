@@ -1,7 +1,10 @@
-﻿@model GestorCuentasCorrientes.web.Models.ViewModels.PresupuestoCreateVm
+﻿@using GestorCuentasCorrientes.web.Models
+@model GestorCuentasCorrientes.web.Models.ViewModels.PresupuestoCreateVm
 
 @{
     ViewData["Title"] = "Nuevo Presupuesto";
+
+    var productos = (IEnumerable<Producto>)ViewBag.Productos;
 }
 
 <div class="container mt-4">
@@ -98,7 +101,6 @@
 
         </div>
 
-
         <!-- CONCEPTOS -->
 
         <div class="card mb-4">
@@ -132,7 +134,7 @@
                             <tr>
 
                                 <th style="width: 40%">
-                                    Descripción
+                                    Producto
                                 </th>
 
                                 <th style="width: 15%">
@@ -162,11 +164,23 @@
 
                                     <td>
 
-                                        <input type="text"
-                                               name="Detalles[@i].Descripcion"
-                                               value="@Model.Detalles[i].Descripcion"
-                                               class="form-control"
-                                               maxlength="200" />
+                                        <select name="Detalles[@i].ProductoId"
+                                                class="form-select producto">
+
+                                            <option value="">
+                                                -- Seleccione un producto --
+                                            </option>
+
+                                            @foreach (var producto in productos)
+                                            {
+                                                <option value="@producto.Id"
+                                                        data-precio="@producto.PrecioUnitario.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                        selected="@(producto.Id == Model.Detalles[i].ProductoId ? "selected" : null)">
+                                                    @producto.Nombre
+                                                </option>
+                                            }
+
+                                        </select>
 
                                     </td>
 
@@ -183,12 +197,10 @@
 
                                     <td>
 
-                                        <input type="number"
-                                               name="Detalles[@i].PrecioUnitario"
-                                               value="@Model.Detalles[i].PrecioUnitario"
+                                        <input type="text"
                                                class="form-control precio"
-                                               min="0.01"
-                                               step="0.01" />
+                                               value="0,00"
+                                               readonly />
 
                                     </td>
 
@@ -223,13 +235,10 @@
                 <div class="text-end mt-3">
 
                     <h4>
-
                         Total:
-
                         <span id="totalPresupuesto">
                             $0,00
                         </span>
-
                     </h4>
 
                 </div>
@@ -237,7 +246,6 @@
             </div>
 
         </div>
-
 
         <!-- BOTONES -->
 
@@ -264,12 +272,35 @@
 
 </div>
 
+<!--
+    Plantilla de opciones de productos.
+    Se utiliza para crear nuevas filas mediante JavaScript.
+-->
+<template id="opcionesProductos">
+
+    <option value="">
+        -- Seleccione un producto --
+    </option>
+
+    @foreach (var producto in productos)
+    {
+        <option value="@producto.Id"
+                data-precio="@producto.PrecioUnitario.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+            @producto.Nombre
+        </option>
+    }
+
+</template>
 
 @section Scripts {
 
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+
+        // ------------------------------------------------------------
+        // Actualiza los índices de los elementos del formulario
+        // ------------------------------------------------------------
 
         function actualizarIndices() {
 
@@ -278,10 +309,12 @@
 
             filas.forEach((fila, index) => {
 
-                fila.querySelectorAll("input").forEach(input => {
+                fila.querySelectorAll(
+                    "input, select"
+                ).forEach(elemento => {
 
                     const name =
-                        input.getAttribute("name");
+                        elemento.getAttribute("name");
 
                     if (!name)
                         return;
@@ -292,7 +325,7 @@
                             `Detalles[${index}]`
                         );
 
-                    input.setAttribute(
+                    elemento.setAttribute(
                         "name",
                         nuevoName
                     );
@@ -303,6 +336,115 @@
         }
 
 
+        // ------------------------------------------------------------
+        // Obtiene el precio del producto seleccionado
+        // ------------------------------------------------------------
+
+        function obtenerPrecio(fila) {
+
+            const select =
+                fila.querySelector(".producto");
+
+            const precioInput =
+                fila.querySelector(".precio");
+
+            if (!select || !precioInput)
+                return 0;
+
+            const opcionSeleccionada =
+                select.options[select.selectedIndex];
+
+            if (!opcionSeleccionada)
+                return 0;
+
+            const precio =
+                parseFloat(
+                    opcionSeleccionada.dataset.precio
+                ) || 0;
+
+            precioInput.value =
+                precio.toLocaleString(
+                    "es-AR",
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+
+            return precio;
+        }
+
+
+        // ------------------------------------------------------------
+        // Actualiza precio y subtotal de una fila
+        // ------------------------------------------------------------
+
+        function actualizarFila(fila) {
+
+            const select =
+                fila.querySelector(".producto");
+
+            const cantidadInput =
+                fila.querySelector(".cantidad");
+
+            const precioInput =
+                fila.querySelector(".precio");
+
+            const subtotalElemento =
+                fila.querySelector(".subtotal");
+
+            if (!select ||
+                !cantidadInput ||
+                !precioInput ||
+                !subtotalElemento)
+                return;
+
+            const opcionSeleccionada =
+                select.options[select.selectedIndex];
+
+            let precio = 0;
+
+            if (opcionSeleccionada) {
+
+                precio =
+                    parseFloat(
+                        opcionSeleccionada.dataset.precio
+                    ) || 0;
+
+            }
+
+            const cantidad =
+                parseFloat(
+                    cantidadInput.value
+                ) || 0;
+
+            precioInput.value =
+                precio.toLocaleString(
+                    "es-AR",
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+
+            const subtotal =
+                cantidad * precio;
+
+            subtotalElemento.textContent =
+                subtotal.toLocaleString(
+                    "es-AR",
+                    {
+                        style: "currency",
+                        currency: "ARS"
+                    }
+                );
+        }
+
+
+        // ------------------------------------------------------------
+        // Actualiza todos los subtotales y el total general
+        // ------------------------------------------------------------
+
         function actualizarTotales() {
 
             let total = 0;
@@ -311,39 +453,32 @@
                 .querySelectorAll(".detalle-row")
                 .forEach(fila => {
 
+                    actualizarFila(fila);
+
+                    const cantidadInput =
+                        fila.querySelector(".cantidad");
+
+                    const select =
+                        fila.querySelector(".producto");
+
                     const cantidad =
                         parseFloat(
-                            fila.querySelector(".cantidad")?.value
+                            cantidadInput?.value
                         ) || 0;
+
+                    const opcionSeleccionada =
+                        select?.options[
+                            select.selectedIndex
+                        ];
 
                     const precio =
                         parseFloat(
-                            fila.querySelector(".precio")?.value
+                            opcionSeleccionada?.dataset.precio
                         ) || 0;
 
-                    const subtotal =
-                        cantidad * precio;
-
-                    total += subtotal;
-
-                    const subtotalElemento =
-                        fila.querySelector(".subtotal");
-
-                    if (subtotalElemento) {
-
-                        subtotalElemento.textContent =
-                            subtotal.toLocaleString(
-                                "es-AR",
-                                {
-                                    style: "currency",
-                                    currency: "ARS"
-                                }
-                            );
-
-                    }
+                    total += cantidad * precio;
 
                 });
-
 
             document.getElementById(
                 "totalPresupuesto"
@@ -357,6 +492,10 @@
                 );
         }
 
+
+        // ------------------------------------------------------------
+        // Agregar nuevo concepto
+        // ------------------------------------------------------------
 
         document.getElementById(
             "btnAgregarDetalle"
@@ -385,10 +524,12 @@
 
                     <td>
 
-                        <input type="text"
-                               name="Detalles[${index}].Descripcion"
-                               class="form-control"
-                               maxlength="200" />
+                        <select name="Detalles[${index}].ProductoId"
+                                class="form-select producto">
+
+                            ${document.getElementById("opcionesProductos").innerHTML}
+
+                        </select>
 
                     </td>
 
@@ -405,12 +546,10 @@
 
                     <td>
 
-                        <input type="number"
-                               name="Detalles[${index}].PrecioUnitario"
+                        <input type="text"
                                class="form-control precio"
-                               value="0"
-                               min="0.01"
-                               step="0.01" />
+                               value="0,00"
+                               readonly />
 
                     </td>
 
@@ -432,6 +571,7 @@
                         </button>
 
                     </td>
+
                 `;
 
                 container.appendChild(fila);
@@ -442,6 +582,10 @@
             }
         );
 
+
+        // ------------------------------------------------------------
+        // Eliminar concepto
+        // ------------------------------------------------------------
 
         document.addEventListener(
             "click",
@@ -477,13 +621,50 @@
         );
 
 
+        // ------------------------------------------------------------
+        // Cambio de producto
+        // ------------------------------------------------------------
+
+        document.addEventListener(
+            "change",
+            function (e) {
+
+                if (
+                    e.target.classList.contains(
+                        "producto"
+                    )
+                ) {
+
+                    const fila =
+                        e.target.closest(
+                            ".detalle-row"
+                        );
+
+                    if (fila) {
+
+                        actualizarFila(fila);
+                        actualizarTotales();
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        // ------------------------------------------------------------
+        // Cambio de cantidad
+        // ------------------------------------------------------------
+
         document.addEventListener(
             "input",
             function (e) {
 
                 if (
-                    e.target.classList.contains("cantidad") ||
-                    e.target.classList.contains("precio")
+                    e.target.classList.contains(
+                        "cantidad"
+                    )
                 ) {
 
                     actualizarTotales();
@@ -494,7 +675,18 @@
         );
 
 
-        actualizarTotales();
+        // ------------------------------------------------------------
+        // Inicialización
+        // ------------------------------------------------------------
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                actualizarTotales();
+
+            }
+        );
 
     </script>
 }
