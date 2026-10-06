@@ -1,0 +1,154 @@
+﻿@model IEnumerable<GestorCuentasCorrientes.web.Models.Presupuesto>
+
+@{
+    ViewData["Title"] = "Presupuestos";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>Presupuestos</h2>
+
+        <a asp-controller="Presupuestos"
+           asp-action="Create"
+           class="btn btn-primary">
+            + Nuevo presupuesto
+        </a>
+
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No hay presupuestos registrados.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+
+            <div class="card-header">
+                <strong>Listado de presupuestos</strong>
+            </div>
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    N.º
+                                </th>
+
+                                <th>
+                                    Fecha
+                                </th>
+
+                                <th>
+                                    Cliente
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
+                                <th class="text-end">
+                                    Total
+                                </th>
+
+                                <th class="text-center">
+                                    Acciones
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var presupuesto in Model)
+                            {
+                                var total = presupuesto.Detalles
+                                    .Sum(d =>
+                                        d.Cantidad *
+                                        d.PrecioUnitario);
+
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            @presupuesto.Id
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @presupuesto.Fecha.ToString("dd/MM/yyyy")
+                                    </td>
+
+                                    <td>
+                                        @presupuesto.Cliente?.RazonSocial
+                                    </td>
+
+                                    <td>
+
+                                        @if (presupuesto.Estado == "Aceptado")
+                                        {
+                                            <span class="badge bg-success">
+                                                Aceptado
+                                            </span>
+                                        }
+                                        else if (presupuesto.Estado == "Rechazado")
+                                        {
+                                            <span class="badge bg-danger">
+                                                Rechazado
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                @presupuesto.Estado
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                    <td class="text-end">
+
+                                        @total.ToString("C2")
+
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        <a asp-controller="Presupuestos"
+                                           asp-action="Details"
+                                           asp-route-id="@presupuesto.Id"
+                                           class="btn btn-sm btn-outline-primary">
+
+                                            Ver
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>

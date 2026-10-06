@@ -20,14 +20,23 @@
 
         </div>
 
-        <a asp-controller="Clientes"
-           asp-action="Details"
-           asp-route-id="@Model.ClienteId"
-           class="btn btn-secondary">
+        <div class="d-flex gap-2">
 
-            Volver al cliente
+            <a asp-controller="Presupuestos"
+               asp-action="Pdf"
+               asp-route-id="@Model.Id"
+               class="btn btn-danger">
+                Descargar PDF
+            </a>
 
-        </a>
+            <a asp-controller="Clientes"
+               asp-action="Details"
+               asp-route-id="@Model.ClienteId"
+               class="btn btn-secondary">
+                Volver al cliente
+            </a>
+
+        </div>
 
     </div>
 

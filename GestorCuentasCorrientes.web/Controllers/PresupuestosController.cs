@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+
 
 namespace GestorCuentasCorrientes.web.Controllers
 {
@@ -23,7 +27,18 @@ namespace GestorCuentasCorrientes.web.Controllers
             _userManager = userManager;
         }
 
-        // GET: Presupuestos/Create
+        // GET: Presupuestos
+        public async Task<IActionResult> Index()
+        {
+            var presupuestos = await _context.Presupuestos
+                .Include(p => p.Cliente)
+                .Include(p => p.Detalles)
+                .AsNoTracking()
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+
+            return View(presupuestos);
+        }
 
         // GET: Presupuestos/Create
         public async Task<IActionResult> Create(int? clienteId)
@@ -187,6 +202,219 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return NotFound();
 
             return View(presupuesto);
+        }
+
+        // GET: Presupuestos/Pdf/5
+        public async Task<IActionResult> Pdf(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var presupuesto = await _context.Presupuestos
+                .Include(p => p.Cliente)
+                .Include(p => p.Usuario)
+                .Include(p => p.Detalles)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (presupuesto == null)
+                return NotFound();
+
+            decimal total = presupuesto.Detalles
+                .Sum(d => d.Cantidad * d.PrecioUnitario);
+
+            var documento = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(40);
+
+                    page.DefaultTextStyle(x =>
+                        x.FontSize(10));
+
+                    page.Header()
+                        .Column(column =>
+                        {
+                            column.Item()
+                                .Text($"PRESUPUESTO N.º {presupuesto.Id}")
+                                .FontSize(20)
+                                .Bold();
+
+                            column.Item()
+                                .PaddingTop(5)
+                                .Text("Gestor de Cuentas Corrientes")
+                                .FontSize(11);
+                        });
+
+                    page.Content()
+                        .PaddingTop(20)
+                        .Column(column =>
+                        {
+                            column.Spacing(10);
+
+                            column.Item()
+                                .Row(row =>
+                                {
+                                    row.RelativeItem()
+                                        .Column(col =>
+                                        {
+                                            col.Item()
+                                                .Text("Cliente:")
+                                                .Bold();
+
+                                            col.Item()
+                                                .Text(
+                                                    presupuesto.Cliente?.RazonSocial
+                                                    ?? "Sin cliente");
+                                        });
+
+                                    row.RelativeItem()
+                                        .Column(col =>
+                                        {
+                                            col.Item()
+                                                .Text("Fecha:")
+                                                .Bold();
+
+                                            col.Item()
+                                                .Text(
+                                                    presupuesto.Fecha
+                                                        .ToString("dd/MM/yyyy"));
+                                        });
+                                });
+
+                            if (!string.IsNullOrWhiteSpace(
+                                presupuesto.Observaciones))
+                            {
+                                column.Item()
+                                    .PaddingTop(5)
+                                    .Column(col =>
+                                    {
+                                        col.Item()
+                                            .Text("Observaciones:")
+                                            .Bold();
+
+                                        col.Item()
+                                            .Text(
+                                                presupuesto.Observaciones);
+                                    });
+                            }
+
+                            column.Item()
+                                .PaddingTop(15)
+                                .Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(4);
+                                        columns.RelativeColumn(1.2f);
+                                        columns.RelativeColumn(2);
+                                        columns.RelativeColumn(2);
+                                    });
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell()
+                                            .Background(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .Text("Producto")
+                                            .Bold();
+
+                                        header.Cell()
+                                            .Background(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignRight()
+                                            .Text("Cantidad")
+                                            .Bold();
+
+                                        header.Cell()
+                                            .Background(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignRight()
+                                            .Text("Precio Unitario")
+                                            .Bold();
+
+                                        header.Cell()
+                                            .Background(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignRight()
+                                            .Text("Subtotal")
+                                            .Bold();
+                                    });
+
+                                    foreach (var detalle in presupuesto.Detalles)
+                                    {
+                                        var subtotal =
+                                            detalle.Cantidad *
+                                            detalle.PrecioUnitario;
+
+                                        table.Cell()
+                                            .BorderBottom(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .Text(detalle.Descripcion);
+
+                                        table.Cell()
+                                            .BorderBottom(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignRight()
+                                            .Text(
+                                                detalle.Cantidad
+                                                    .ToString("N2"));
+
+                                        table.Cell()
+                                            .BorderBottom(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignRight()
+                                            .Text(
+                                                detalle.PrecioUnitario
+                                                    .ToString("C2"));
+
+                                        table.Cell()
+                                            .BorderBottom(1)
+                                            .BorderColor(Colors.Grey.Lighten2)
+                                            .Padding(5)
+                                            .AlignRight()
+                                            .Text(
+                                                subtotal
+                                                    .ToString("C2"));
+                                    }
+
+                                    table.Cell()
+                                        .ColumnSpan(3)
+                                        .PaddingTop(10)
+                                        .AlignRight()
+                                        .Text("TOTAL")
+                                        .Bold();
+
+                                    table.Cell()
+                                        .PaddingTop(10)
+                                        .AlignRight()
+                                        .Text(total.ToString("C2"))
+                                        .Bold()
+                                        .FontSize(12);
+                                });
+                        });
+
+                    page.Footer()
+                        .AlignCenter()
+                        .Text(text =>
+                        {
+                            text.Span("Presupuesto generado el ");
+                            text.Span(
+                                DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+                        });
+                });
+            });
+
+            byte[] pdf = documento.GeneratePdf();
+
+            return File(
+                pdf,
+                "application/pdf",
+                $"Presupuesto-{presupuesto.Id}.pdf");
         }
 
         // Cargar clientes para el Select
