@@ -1,0 +1,507 @@
+================================================================================
+RESUMEN TECNICO - GESTOR DE CUENTAS CORRIENTES
+================================================================================
+
+PROYECTO: GestorCuentasCorrientes
+FRAMEWORK: ASP.NET Core MVC (.NET 10)
+BASE DE DATOS: SQL Server
+AUTENTICACION: ASP.NET Identity
+PDF: QuestPDF Community v2026.9.1
+UI: Bootstrap 5, jQuery
+FECHA: Octubre 2026
+
+================================================================================
+1. ESTRUCTURA DE CARPETAS
+================================================================================
+
+Controllers/
+  - ClientesController.cs
+  - HomeController.cs
+  - MovimientosController.cs
+  - PresupuestosController.cs
+  - ProductosController.cs
+
+Data/
+  - ApplicationDbContext.cs
+  - Migrations/ (5 migraciones aplicadas)
+
+Models/
+  - Cliente, Localidad, TipoMovimiento, MedioPago, Usuario
+  - Movimiento, Pago, Cheque, Comprobante
+  - Presupuesto, PresupuestoDetalle
+  - Producto, ErrorViewModel
+  - ViewModels/ (7 ViewModels)
+
+Services/
+  - RecibosPdfService.cs (QuestPDF)
+
+Views/
+  - Clientes/ (Index, Details, Create, Edit)
+  - Home/ (Index, Privacy)
+  - Movimientos/ (Create)
+  - Presupuestos/ (Index, Create, Details)
+  - Productos/ (Index, Create, Edit)
+  - Shared/ (_Layout, _LoginPartial, Error, etc.)
+
+================================================================================
+2. ENTIDADES Y PROPIEDADES
+================================================================================
+
+LOCALIDAD
+  - Id (int, PK)
+  - Nombre (string, 100, Required)
+  - Provincia (string?, 100)
+  → 1:N Cliente
+
+TIPOMOVIMIENTO
+  - Id (int, PK)
+  - Codigo (string, 10, Required, Unique)
+  - Nombre (string, 50, Required)
+  - Signo (short: 1 o -1, CHECK constraint)
+  → Seed: 6 registros (FACT, REC, NC, ND, AJU_D, AJU_C)
+  → 1:N Movimiento
+
+MEDIOPAGO
+  - Id (int, PK)
+  - Nombre (string, 50, Required, Unique)
+  → Seed: 6 registros (Efectivo, Transferencia, Cheque, E-cheque, Tarjeta débito/crédito)
+  → 1:N Pago
+
+USUARIO (extends IdentityUser)
+  - Nombre (string, 100, Required)
+  - Apellido (string, 100, Required)
+  → 1:N Movimiento
+
+CLIENTE
+  - Id (int, PK)
+  - RazonSocial (string, 150, Required)
+  - CuitDni (string?, 20; unique filtered index)
+  - Direccion (string?, 200)
+  - Telefono (string?, 30)
+  - Email (string?, 100, validated)
+  - Activo (bool, default: true)
+  - FechaAlta (DateTime, default SQL GETDATE())
+  - LocalidadId (int, FK Required)
+  → N:1 Localidad (Restrict)
+  → 1:N Movimiento (Restrict)
+
+MOVIMIENTO ⚠️ CRÍTICO - 4 FKs ALL RESTRICT
+  - Id (int, PK)
+  - Fecha (DateTime, Required, default DateTime.Now)
+  - NumeroComprobante (string?, 30)
+  - Importe (decimal, 12,2, CHECK > 0)
+  - Observaciones (string?, 500)
+  - FechaRegistro (DateTime, default SQL GETDATE())
+  - Anulado (bool, default: false)
+  - ClienteId (int, FK Required)
+  - TipoMovimientoId (int, FK Required)
+  - UsuarioId (string, FK Required)
+  - MovimientoOrigenId (int?, FK nullable; auto-referencia)
+  → N:1 Cliente (Restrict)
+  → N:1 TipoMovimiento (Restrict)
+  → N:1 Usuario (Restrict)
+  → N:1 Movimiento auto-ref (Restrict) - permite Factura→NC/ND
+  → 1:N Movimiento auto-ref (MovimientosOriginados)
+  → 1:N Pago (Restrict)
+  → 1:N Comprobante (Restrict)
+  [NOTA: "Esto me gustaria entenderlo mejor y que el chat me lo explique" - developer]
+
+PAGO
+  - Id (int, PK)
+  - Importe (decimal, 12,2, CHECK > 0)
+  - MovimientoId (int, FK Required)
+  - MedioPagoId (int, FK Required)
+  → N:1 Movimiento (Restrict)
+  → N:1 MedioPago (Restrict)
+  → 1:1 Cheque (opcional)
+
+CHEQUE
+  - Id (int, PK)
+  - Numero (string, 20, Required)
+  - Banco (string?, 100)
+  - Titular (string?, 150)
+  - FechaEmision (DateTime, Required)
+  - FechaCobro (DateTime, Required)
+  - Estado (string, 20, default "EnCartera", CHECK IN ('EnCartera','Depositado','Acreditado','Rechazado'))
+  - PagoId (int, FK Required, unique index)
+  → 1:1 Pago (Restrict)
+
+COMPROBANTE
+  - Id (int, PK)
+  - NombreArchivo (string, 255, Required)
+  - RutaArchivo (string, 500, Required)
+  - TipoArchivo (string?, 10)
+  - FechaCarga (DateTime, default SQL GETDATE())
+  - MovimientoId (int, FK Required)
+  → N:1 Movimiento (Restrict)
+
+PRESUPUESTO
+  - Id (int, PK)
+  - Fecha (DateTime, Required, default DateTime.Now)
+  - Observaciones (string?, 500)
+  - Estado (string, default "Pendiente", CHECK IN ('Pendiente','Aprobado','Rechazado','Anulado'))
+  - FechaRegistro (DateTime, default SQL GETDATE())
+  - ClienteId (int, FK Required)
+  - UsuarioId (string, FK Required)
+  → N:1 Cliente (Restrict)
+  → N:1 Usuario (Restrict)
+  → 1:N PresupuestoDetalle
+  [NOTA: Nunca se borra, solo se anula]
+
+PRESUPUESTODETALLE
+  - Id (int, PK)
+  - Descripcion (string, 200, Required)
+  - Cantidad (decimal, 18,3, Required)
+  - PrecioUnitario (decimal, 18,2, Required)
+  - PresupuestoId (int, FK Required)
+  → N:1 Presupuesto (NO Restrict, por diseño)
+  [NOTA: Copia Nombre+Precio del Producto, luego es independiente]
+
+PRODUCTO
+  - Id (int, PK)
+  - Nombre (string, 200, Required)
+  - PrecioUnitario (decimal, 18,2, CHECK > 0)
+  - Activo (bool, default: true)
+  [NOTA: No tiene FKs. Se referencia por ID en presupuestos, sin relación DB]
+
+================================================================================
+3. APPLICATIONDBCONTEXT
+================================================================================
+
+DbSets: Localidades, TiposMovimiento, MediosPago, Usuarios, Clientes, Movimientos,
+		Pagos, Cheques, Comprobantes, Presupuestos, PresupuestoDetalles, Productos
+
+Configuraciones principales (Fluent API):
+- Localidad: unique index Codigo, CHECK Signo IN (1,-1), 6 seed
+- MedioPago: unique index Nombre, 6 seed
+- Cliente: unique filtered index CuitDni
+- Movimiento: 4 FKs TODAS Restrict, auto-ref, CHECK Importe > 0
+- Pago: CHECK Importe > 0, 1:1 Cheque
+- Cheque: CHECK Estado, unique index PagoId
+- Presupuesto: CHECK Estado, 2 FKs Restrict
+- PresupuestoDetalle: Precision (18,3) Cantidad, (18,2) PrecioUnitario
+- Producto: Precision (18,2) PrecioUnitario
+
+================================================================================
+4. CONTROLLERS Y ACCIONES
+================================================================================
+
+CLIENTESCONTROLLER [Authorize]
+  GET  /Clientes/Index           → Listado con búsqueda, localidad, estado
+  GET  /Clientes/Details/{id}    → Detalle + historial movimientos + saldo
+  GET  /Clientes/Create          → Formulario
+  POST /Clientes/Create          → Crea cliente (Activo=true, FechaAlta=now)
+  GET  /Clientes/Edit/{id}       → Formulario con datos
+  POST /Clientes/Edit/{id}       → Edita preservando FechaAlta
+  POST /Clientes/CambiarEstado   → [Roles="Admin"] Alterna Activo
+
+HOMECONTROLLER
+  GET  /Home/Index               → Página pública inicio
+  GET  /Home/Privacy             → Política privacidad
+  GET  /Home/Error               → [ResponseCache] Página error
+
+MOVIMIENTOSCONTROLLER [Authorize]
+  GET  /Movimientos/Create       → Formulario unificado (simple + recibo)
+  POST /Movimientos/Create       → Crea Movimiento: si TipoMovimientoId=2 (Recibo) 
+									llama CrearRecibo(); sino simple. Maneja upload.
+  POST /Movimientos/VerComprobante/{id} → Descarga comprobante PDF
+  GET  /Movimientos/PruebaPdf    → [Sin Authorize] Prueba generación PDF
+
+PRESUPUESTOSCONTROLLER [Authorize]
+  GET  /Presupuestos/Index       → Listado
+  GET  /Presupuestos/Create      → Formulario con líneas dinámicas
+  POST /Presupuestos/Create      → Crea Presupuesto + N PresupuestoDetalles
+  GET  /Presupuestos/Details/{id} → Detalles + botones Aceptar/Rechazar
+  GET  /Presupuestos/Pdf/{id}    → Genera PDF QuestPDF
+  POST /Presupuestos/Aceptar     → Estado = "Aprobado"
+  POST /Presupuestos/Rechazar    → Estado = "Rechazado"
+
+PRODUCTOSCONTROLLER [Authorize]
+  GET  /Productos/Index          → Listado con búsqueda
+  GET  /Productos/Create         → Formulario
+  POST /Productos/Create         → Crea (Activo=true)
+  GET  /Productos/Edit/{id}      → Formulario
+  POST /Productos/Edit/{id}      → Edita
+  POST /Productos/CambiarEstado  → Alterna Activo
+
+================================================================================
+5. VIEWMODELS
+================================================================================
+
+ClienteDetalleVm
+  - Cliente: Cliente
+  - SaldoActual: decimal
+  - Movimientos: List<MovimientoDetalleVm>
+
+MovimientoDetalleVm
+  - Id, Fecha, TipoMovimientoNombre, NumeroComprobante?, Importe, Signo (short)
+  - Anulado, SaldoAcumulado, ComprobanteId?
+
+MovimientoSimpleCreateVm (BASE)
+  - ClienteId, ClienteNombre ([BindNever]), TipoMovimientoId
+  - Fecha, NumeroComprobante?, Importe, Observaciones?
+  - ArchivoComprobante (IFormFile?)
+
+MovimientoRecibosCreateVm (extends MovimientoSimpleCreateVm)
+  + Pagos: List<PagoLineaVm>
+
+PagoLineaVm
+  - MedioPagoId, Importe
+  - ChequeNumero?, ChequeBanco?, ChequeTitular?, ChequeFechaEmision?, ChequeFechaCobro?
+
+ReciboCreateVm (ALTERNATIVA a MovimientoRecibosCreateVm)
+  - ClienteId, ClienteNombre ([BindNever]), Fecha, NumeroComprobante?
+  - Observaciones?, ArchivoComprobante?
+  - Pagos: List<PagoLineaVm>
+
+PresupuestoCreateVm
+  - ClienteId, Fecha, Observaciones?
+  - Detalles: List<PresupuestoDetalleVm>
+
+PresupuestoDetalleVm
+  - ProductoId, Cantidad (default: 1)
+
+================================================================================
+6. SERVICIOS
+================================================================================
+
+ReciboPdfService
+  Método público: byte[] GenerarPdf(MovimientoRecibosCreateVm, Cliente, 
+									Dictionary<int,string>, int)
+  Genera PDF con QuestPDF:
+	- Header: "RECIBO", "Gestor de Cuentas Corrientes"
+	- Datos: Nº, Fecha, Cliente, CUIT
+	- Tabla de pagos (Medio, Importe)
+	- Si hay cheques: Número, Banco, Titular, Fechas
+	- Observaciones
+	- Footer: Número de página
+  Resultado: byte[] guardado en App_Data/Comprobantes/{id}/
+
+================================================================================
+7. VISTAS RAZOR
+================================================================================
+
+Clientes/Index.cshtml
+  - Tabla con filtros (búsqueda, localidad, estado)
+  - Botones: Detalles, Editar, CambiarEstado
+
+Clientes/Details.cshtml
+  - Datos cliente + tabla de movimientos con saldo acumulado
+
+Clientes/Create.cshtml, Edit.cshtml
+  - Formulario: RazonSocial, CUIT, Dirección, Teléfono, Email, Localidad
+  - Edit: campos adicionales Activo (checkbox), FechaAlta (readonly)
+
+Home/Index.cshtml, Privacy.cshtml
+  - Página pública inicio y privacidad
+
+Movimientos/Create.cshtml (280+ líneas)
+  - Form gigante unificada para movimientos simple + recibos
+  - SI Tipo=Recibo: tabla dinámica de N pagos con cheques por pago
+  - Lógica JS para agregar/eliminar pagos
+  - Upload comprobante, checkbox "Generar PDF"
+
+Presupuestos/Index.cshtml
+  - Tabla de presupuestos por estado (badges de color)
+  - Botones: Detalles, Acciones
+
+Presupuestos/Create.cshtml
+  - Formulario: Cliente, Fecha, Observaciones
+  - Tabla dinámica de líneas: Producto dropdown, Cantidad
+  - JS: carga precio de Producto, calcula totales
+
+Presupuestos/Details.cshtml
+  - Datos presupuesto + tabla líneas (read-only)
+  - Total destacado
+  - Botones condicionales: Aceptar (si Pendiente), Rechazar (si Pendiente)
+  - Link descargar PDF
+
+Productos/Index.cshtml
+  - Tabla: Nombre, Precio (currency), Activo (badge), Acciones
+  - Filtro búsqueda
+  - Botones: Editar, Activar/Desactivar
+
+Productos/Create.cshtml, Edit.cshtml
+  - Formulario: Nombre, PrecioUnitario
+  - Edit: checkbox Activo
+
+Shared/_Layout.cshtml
+  - Master con Bootstrap 5
+  - Navbar: Clientes, Movimientos, Presupuestos, Productos
+  - User menu (login/logout)
+
+Shared/_LoginPartial.cshtml
+  - Usuario autenticado + Logout
+
+Shared/_ValidationScriptsPartial.cshtml
+  - jQuery Validation bundled
+
+Shared/Error.cshtml
+  - Página error con ErrorViewModel
+
+================================================================================
+8. MIGRACIONES
+================================================================================
+
+00000000000000_CreateIdentitySchema
+  → Crea tablas Identity ASP.NET Core
+
+20260823155524_Inicial
+  → Todas entidades base (sin seed inicial)
+
+20260823171711_SeedTipoPagoyMovimiento
+  → Inserta seed: 6 TiposMovimiento, 6 MediosPago
+
+20260930175224_AgregarPresupuestos
+  → Crea Presupuesto, PresupuestoDetalle
+
+20261002175926_AgregarProductos
+  → Crea Producto
+
+Estado: 5 migraciones aplicadas
+
+================================================================================
+9. MODULO PRESUPUESTOS - ESTADO ACTUAL
+================================================================================
+
+✅ EXISTE:
+  - Modelos Presupuesto, PresupuestoDetalle (completos)
+  - ViewModels PresupuestoCreateVm, PresupuestoDetalleVm
+  - Controller con Index, Create (GET/POST), Details, Pdf, Aceptar, Rechazar
+  - Vistas Index, Create, Details funcionales
+  - Migraciones aplicadas
+  - Generación PDF con QuestPDF
+  - Cambio de estado (Pendiente → Aprobado/Rechazado)
+
+❌ FALTA:
+  - Conversión presupuesto aprobado → Movimiento de tipo Factura
+  - Validación: impedir aceptar/rechazar si no Pendiente
+  - Auditoría: quién/cuándo aprobó
+  - Botón "Descargar PDF" en Details
+  - PresupuestoDetalle tiene Descripcion + Precio pero NO ProductoId FK
+	(copia datos y desvincula; válido pero confuso)
+
+================================================================================
+10. TODO / PENDIENTES / INCOMPLETO
+================================================================================
+
+En ApplicationDbContext.cs línea ~150:
+  "Esto me gustaria entenderlo mejor y que el chat me lo explique."
+  - Referencia a auto-referencia Movimiento (MovimientoOrigen)
+  - Permite vincular Factura → Nota de Crédito
+
+Otros comentarios:
+  - DbContext línea 23: "Agrego 2 nuevas tablas 30/09..."
+  - DbContext línea 26: "Agrego nueva tabla 2/10..."
+
+Sin encontrar:
+  - TODOs explícitos en Controllers
+  - FIXME o PENDIENTE comentarios
+  - Código incompleto (todo está funcional)
+
+================================================================================
+11. CONFIGURACION DEL PROYECTO
+================================================================================
+
+.NET 10
+SQL Server (DefaultConnection en appsettings.json)
+ASP.NET Identity + Custom Usuario (Nombre, Apellido)
+QuestPDF Community 2026.9.1
+Bootstrap 5, jQuery
+EF Core Migrations
+Cultura: es-AR
+
+Program.cs:
+  - QuestPDF.Settings.License = LicenseType.Community
+  - Identity: 6 chars password mínimo, no requiere complejidad
+  - No requiere confirmación email
+  - ReciboPdfService inyectado como Scoped
+  - Controllers + RazorPages
+
+================================================================================
+12. PUNTOS CRITICOS
+================================================================================
+
+1. DeleteBehavior.Restrict en Movimiento
+   → Las 4 FK (Cliente, TipoMovimiento, Usuario, MovimientoOrigen) no permiten
+	 borrar entidades con registros. APROPIADO para auditoría.
+
+2. Auto-referencia Movimiento
+   → Estructura compleja pero funcional. Permite Factura→NC/ND y auditoría.
+
+3. Presupuesto nunca se borra
+   → Solo se anula. PresupuestoDetalle SIN Restrict es apropiado.
+
+4. Cheque 1:1 con Pago
+   → Un Pago tipo Cheque/E-cheque genera 1 Cheque. Validación en Controller.
+
+5. Vista Movimientos/Create gigante
+   → 280+ líneas. Lógica unificada. Mejora futura: separar en 2 vistas.
+
+6. ViewBag en lugar de ViewModel
+   → Flexibilidad pero menos tipado. Válido pero podría mejorarse.
+
+7. PDF Recibo sin cacheo
+   → Se genera cada vez. Se salva en App_Data pero podría optimizarse.
+
+8. Modelo Presupuesto sin relación a Movimiento
+   → Si se implementa conversión a Factura, necesitaria FK para auditoría.
+
+================================================================================
+13. DIAGRAMA DE RELACIONES
+================================================================================
+
+[Localidad] ──1:N──> [Cliente] ──[Restrict]──> NO DELETE si tiene Movimientos
+						  ↓
+						1:N (Restrict)
+						  ↓
+[Usuario] ──1:N──> [Movimiento] ◄── CRITICAL: 4 FKs ALL RESTRICT ──►
+	↑                   ├─ N:1 ─> [TipoMovimiento]
+	│                   ├─ N:1 ─> [Usuario]
+	│                   ├─ N:1 ─> [Movimiento] (auto-ref MovimientoOrigen)
+	│                   │   └─ 1:N ─> [Movimiento] (MovimientosOriginados)
+	│                   ├─ 1:N ─> [Pago] (Restrict)
+	│                   │   ├─ N:1 ─> [MedioPago]
+	│                   │   └─ 1:1 ─> [Cheque]
+	│                   └─ 1:N ─> [Comprobante] (Restrict)
+	│
+	└──1:N──> [Presupuesto] (Restrict) ──1:N──> [PresupuestoDetalle]
+											 └─ ref ProductoId (no FK)
+
+[Producto] (stand-alone, sin FKs)
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+
+GestorCuentasCorrientes es un sistema ASP.NET Core MVC para gestionar
+cuentas corrientes de clientes con:
+
+FUNCIONALIDADES:
+  ✓ CRUD Clientes (con localidades, activo/inactivo, historial con saldo)
+  ✓ Movimientos: Facturas, Recibos, Notas (crédito/débito), Ajustes
+  ✓ Recibos: múltiples pagos y cheques por recibo
+  ✓ Cheques: seguimiento de estado (En cartera→Depositado→Acreditado→Rechazado)
+  ✓ Presupuestos: cotizaciones a clientes, cambio estado, PDF
+  ✓ Productos: catálogo de precios
+  ✓ PDF: Recibos y presupuestos con QuestPDF
+  ✓ Autenticación: ASP.NET Identity con roles (Admin, User)
+
+ARQUITECTURA:
+  • MVC estándar: Controllers, Models, Views
+  • EF Core Migrations con SQL Server
+  • Fluent API para constraints y relaciones complejas
+  • Services pattern (ReciboPdfService)
+  • Validación Data Annotations + Server-side
+
+ESTADO:
+  • Funcional y en producción
+  • 5 migraciones aplicadas
+  • Posibles mejoras: presupuesto→factura, auditoría, refactoring vistas
+
+DESARROLLADOR:
+  https://github.com/jonathanjordanferreyra/GestorCuentasCorrientes
+  Rama: master
+  Última actualización: 02/10/2026
+
+================================================================================
