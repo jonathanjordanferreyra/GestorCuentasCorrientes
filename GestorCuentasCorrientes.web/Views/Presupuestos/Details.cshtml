@@ -2,37 +2,52 @@
 
 @{
     ViewData["Title"] = "Detalle del Presupuesto";
+
+    var estadoClase = Model.Estado == "Aceptado" ? "status-pill--active"
+                    : Model.Estado == "Rechazado" ? "status-pill--inactive"
+                    : "status-pill--neutral";
 }
 
-<div class="container mt-4">
+<div class="container-fluid px-0">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Encabezado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
 
-        <div>
+        <div class="d-flex align-items-center">
 
-            <h2>
-                Presupuesto N.º @Model.Id
-            </h2>
+            <div class="page-header-icon me-3">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
 
-            <span class="badge bg-secondary">
-                @Model.Estado
-            </span>
+            <div>
+
+                <h1 class="h2 fw-bold mb-2 page-title">
+                    Presupuesto N.º @Model.Id
+                </h1>
+
+                <span class="status-pill @estadoClase">
+                    @Model.Estado
+                </span>
+
+            </div>
 
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-column flex-sm-row gap-2 mt-3 mt-md-0">
 
             <a asp-controller="Presupuestos"
                asp-action="Pdf"
                asp-route-id="@Model.Id"
-               class="btn btn-danger">
+               class="btn btn-danger px-4 shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-1"></i>
                 Descargar PDF
             </a>
 
             <a asp-controller="Clientes"
                asp-action="Details"
                asp-route-id="@Model.ClienteId"
-               class="btn btn-secondary">
+               class="btn btn-outline-secondary px-4">
+                <i class="bi bi-arrow-left me-1"></i>
                 Volver al cliente
             </a>
 
@@ -43,21 +58,24 @@
 
     <!-- DATOS GENERALES -->
 
-    <div class="card mb-4">
+    <div class="card border-0 shadow-sm section-card mb-4">
 
         <div class="card-header">
-            <strong>Datos del presupuesto</strong>
+            <h2 class="section-title">
+                <i class="bi bi-info-circle"></i>
+                Datos del presupuesto
+            </h2>
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-4">
 
-            <div class="row">
+            <div class="row g-4">
 
                 <div class="col-md-4">
 
-                    <strong>Número:</strong>
+                    <div class="info-label">Número</div>
 
-                    <p>
+                    <p class="info-value">
                         @Model.Id
                     </p>
 
@@ -65,9 +83,9 @@
 
                 <div class="col-md-4">
 
-                    <strong>Fecha:</strong>
+                    <div class="info-label">Fecha</div>
 
-                    <p>
+                    <p class="info-value">
                         @Model.Fecha.ToString("dd/MM/yyyy")
                     </p>
 
@@ -75,24 +93,19 @@
 
                 <div class="col-md-4">
 
-                    <strong>Cliente:</strong>
+                    <div class="info-label">Cliente</div>
 
-                    <p>
+                    <p class="info-value">
                         @Model.Cliente?.RazonSocial
                     </p>
 
                 </div>
 
-            </div>
-
-
-            <div class="row">
-
                 <div class="col-md-6">
 
-                    <strong>Usuario:</strong>
+                    <div class="info-label">Usuario</div>
 
-                    <p>
+                    <p class="info-value">
                         @Model.Usuario?.Nombre
                         @Model.Usuario?.Apellido
                     </p>
@@ -101,11 +114,10 @@
 
                 <div class="col-md-6">
 
-                    <strong>Fecha de registro:</strong>
+                    <div class="info-label">Fecha de registro</div>
 
-                    <p>
-                        @Model.FechaRegistro.ToString(
-                            "dd/MM/yyyy HH:mm")
+                    <p class="info-value">
+                        @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")
                     </p>
 
                 </div>
@@ -115,13 +127,15 @@
 
             @if (!string.IsNullOrWhiteSpace(Model.Observaciones))
             {
-                <div>
+                <div class="mt-4">
 
-                    <strong>Observaciones:</strong>
+                    <div class="info-label">Observaciones</div>
 
-                    <p>
-                        @Model.Observaciones
-                    </p>
+                    <div class="info-notes">
+                        <p class="info-value info-multiline mb-0">
+                            @Model.Observaciones
+                        </p>
+                    </div>
 
                 </div>
             }
@@ -133,19 +147,22 @@
 
     <!-- CONCEPTOS -->
 
-    <div class="card">
+    <div class="card border-0 shadow-sm section-card">
 
         <div class="card-header">
 
-            <strong>Conceptos</strong>
+            <h2 class="section-title">
+                <i class="bi bi-list-ul"></i>
+                Conceptos
+            </h2>
 
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-0">
 
             <div class="table-responsive">
 
-                <table class="table table-bordered">
+                <table class="table table-products table-detalles table-totals align-middle mb-0">
 
                     <thead>
 
@@ -192,11 +209,11 @@
 
                             <tr>
 
-                                <td>
+                                <td class="text-muted">
                                     @numeroLinea
                                 </td>
 
-                                <td>
+                                <td class="fw-semibold">
                                     @detalle.Descripcion
                                 </td>
 
@@ -208,7 +225,7 @@
                                     @detalle.PrecioUnitario.ToString("C2")
                                 </td>
 
-                                <td class="text-end">
+                                <td class="text-end fw-semibold">
                                     @subtotal.ToString("C2")
                                 </td>
 

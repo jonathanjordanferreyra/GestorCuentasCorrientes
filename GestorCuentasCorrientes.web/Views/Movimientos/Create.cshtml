@@ -5,68 +5,104 @@
     ViewData["Title"] = "Nuevo Movimiento";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h2>@ViewData["Title"]</h2>
-                </div>
+<div class="container-fluid px-0">
 
-                <div class="card-body">
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center mb-4">
+
+        <div class="page-header-icon me-3">
+            <i class="bi bi-arrow-left-right"></i>
+        </div>
+
+        <div>
+            <h1 class="h2 fw-bold mb-1 page-title">@ViewData["Title"]</h1>
+
+            <p class="text-muted mb-0">
+                Registrá un movimiento o un recibo en la cuenta corriente del cliente.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-xl-9">
+
+            <div class="card border-0 shadow-sm form-card">
+
+                <div class="card-body p-4">
+
                     <form asp-action="Create" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
+                        <!-- Datos del movimiento -->
+                        <h2 class="form-section-title">
+                            <i class="bi bi-person-vcard"></i>
+                            Datos del movimiento
+                        </h2>
+
                         <!-- Cliente (precargado y bloqueado) -->
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label asp-for="ClienteId" class="form-label"></label>
                             <input type="hidden" asp-for="ClienteId" />
-                            <div class="form-control-plaintext">
-                                <strong>@Model.ClienteNombre</strong>
+                            <div class="client-readonly">
+                                <div class="cliente-avatar">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <div>
+                                    <div class="cliente-nombre">@Model.ClienteNombre</div>
+                                    <small class="text-muted">Cliente preseleccionado</small>
+                                </div>
                             </div>
-                            <small class="text-muted d-block mt-1">Cliente preseleccionado</small>
                         </div>
 
-                        <!-- Tipo de Movimiento -->
-                        <div class="mb-3">
-                            <label asp-for="TipoMovimientoId" class="form-label"></label>
-                            <select asp-for="TipoMovimientoId" asp-items="ViewBag.TiposMovimiento" class="form-select" required>
-                                <option value="">-- Selecciona tipo --</option>
-                            </select>
-                            <span asp-validation-for="TipoMovimientoId" class="text-danger"></span>
+                        <div class="row">
+
+                            <!-- Tipo de Movimiento -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TipoMovimientoId" class="form-label"></label>
+                                <select asp-for="TipoMovimientoId" asp-items="ViewBag.TiposMovimiento" class="form-select" required>
+                                    <option value="">-- Selecciona tipo --</option>
+                                </select>
+                                <span asp-validation-for="TipoMovimientoId" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Fecha -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Fecha" class="form-label"></label>
+                                <input asp-for="Fecha" type="date" class="form-control" />
+                                <span asp-validation-for="Fecha" class="text-danger small"></span>
+                            </div>
+
                         </div>
 
-                        <!-- Fecha -->
-                        <div class="mb-3">
-                            <label asp-for="Fecha" class="form-label"></label>
-                            <input asp-for="Fecha" type="date" class="form-control" />
-                            <span asp-validation-for="Fecha" class="text-danger"></span>
-                        </div>
+                        <div class="row">
 
-                        <!-- Número de Comprobante -->
-                        <div class="mb-3">
-                            <label asp-for="NumeroComprobante" class="form-label"></label>
-                            <input asp-for="NumeroComprobante" type="text" class="form-control" placeholder="Ej: FAC-001-00001" />
-                            <span asp-validation-for="NumeroComprobante" class="text-danger"></span>
-                        </div>
+                            <!-- Número de Comprobante -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="NumeroComprobante" class="form-label"></label>
+                                <input asp-for="NumeroComprobante" type="text" class="form-control" placeholder="Ej: FAC-001-00001" />
+                                <span asp-validation-for="NumeroComprobante" class="text-danger small"></span>
+                            </div>
 
-                        <!-- Importe (solo para movimientos simples, oculto para Recibos) -->
-                        <div class="mb-3" id="divImporte" style="display: none;">
-                            <label asp-for="Importe" class="form-label"></label>
-                            <input asp-for="Importe" id="inputImporte" type="number" step="0.01" class="form-control" placeholder="0.00" /> 
-                            <span asp-validation-for="Importe" class="text-danger"></span>
+                            <!-- Importe (solo para movimientos simples, oculto para Recibos) -->
+                            <div class="col-md-6 mb-3" id="divImporte" style="display: none;">
+                                <label asp-for="Importe" class="form-label"></label>
+                                <input asp-for="Importe" id="inputImporte" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                                <span asp-validation-for="Importe" class="text-danger small"></span>
+                            </div>
+
                         </div>
 
                         <!-- Observaciones -->
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label asp-for="Observaciones" class="form-label"></label>
                             <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Notas o detalles adicionales..."></textarea>
-                            <span asp-validation-for="Observaciones" class="text-danger"></span>
+                            <span asp-validation-for="Observaciones" class="text-danger small"></span>
                         </div>
 
                         <!-- LÍNEAS DE PAGO (solo para Recibos) -->
-                        <div id="seccionPagos" style="display: none;" class="mb-4 p-4 border rounded bg-light">
-                            <h5 class="mb-4"><i class="bi bi-receipt"></i> Líneas de Pago</h5>
+                        <div id="seccionPagos" style="display: none;" class="mb-4 pagos-section">
+                            <h5 class="pagos-title"><i class="bi bi-receipt"></i> Líneas de Pago</h5>
 
                             <div id="pagosContainer" class="mb-4">
                                 @for (int i = 0; i < Model.Pagos.Count; i++)
@@ -84,7 +120,7 @@
                                                 <!-- Medio de Pago -->
                                                 <div class="col-md-6">
                                                     <label asp-for="Pagos[i].MedioPagoId" class="form-label fw-semibold"></label>
-                                                    <select asp-for="Pagos[i].MedioPagoId" 
+                                                    <select asp-for="Pagos[i].MedioPagoId"
                                                             asp-items="@(ViewBag.MediosPago as SelectList)"
                                                             class="form-select select-medio-pago"
                                                             required>
@@ -96,8 +132,8 @@
                                                 <!-- Importe Línea -->
                                                 <div class="col-md-6">
                                                     <label asp-for="Pagos[i].Importe" class="form-label fw-semibold"></label>
-                                                    <input asp-for="Pagos[i].Importe" 
-                                                           type="number" step="0.01" min="0.01" 
+                                                    <input asp-for="Pagos[i].Importe"
+                                                           type="number" step="0.01" min="0.01"
                                                            class="form-control input-importe"
                                                            placeholder="0.00"
                                                            required />
@@ -154,27 +190,33 @@
                         </div>
 
                         <!-- Archivo Comprobante -->
-                        <div class="mb-3">
+                        <h2 class="form-section-title">
+                            <i class="bi bi-paperclip"></i>
+                            Comprobante adjunto
+                        </h2>
+
+                        <div class="mb-3 upload-box">
                             <label asp-for="ArchivoComprobante" class="form-label"></label>
                             <input asp-for="ArchivoComprobante" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt" />
-                            <small class="text-muted d-block mt-1">Archivos aceptados: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, TXT (opcional)</small>
-                            <span asp-validation-for="ArchivoComprobante" class="text-danger"></span>
+                            <small class="text-muted d-block mt-2">Archivos aceptados: PDF, JPG, PNG, DOC, DOCX, XLS, XLSX, TXT (opcional)</small>
+                            <span asp-validation-for="ArchivoComprobante" class="text-danger small"></span>
                         </div>
 
-                        <hr class="my-4">
-
                         <!-- Botones de acción -->
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Guardar Movimiento
+                        <div class="d-flex flex-column flex-sm-row gap-2 form-actions mt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-circle me-1"></i> Guardar Movimiento
                             </button>
-                            <a asp-controller="Clientes" asp-action="Details" asp-route-id="@Model.ClienteId" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Cancelar
+                            <a asp-controller="Clientes" asp-action="Details" asp-route-id="@Model.ClienteId" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-1"></i> Cancelar
                             </a>
                         </div>
                     </form>
+
                 </div>
+
             </div>
+
         </div>
     </div>
 </div>

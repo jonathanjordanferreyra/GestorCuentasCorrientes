@@ -7,10 +7,14 @@
 <div class="container-fluid px-0">
 
     <!-- Encabezado -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div class="d-flex align-items-center mb-4">
+
+        <div class="page-header-icon me-3">
+            <i class="bi bi-plus-circle"></i>
+        </div>
 
         <div>
-            <h1 class="h2 fw-bold mb-1">
+            <h1 class="h2 fw-bold mb-1 page-title">
                 Crear Producto
             </h1>
 
@@ -26,7 +30,7 @@
 
         <div class="col-12 col-lg-6">
 
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm form-card">
 
                 <div class="card-body p-4">
 
@@ -50,7 +54,7 @@
                                    placeholder="Nombre del producto" />
 
                             <span asp-validation-for="Nombre"
-                                  class="text-danger">
+                                  class="text-danger small">
                             </span>
 
                         </div>
@@ -70,13 +74,13 @@
                                    placeholder="0.00" />
 
                             <span asp-validation-for="PrecioUnitario"
-                                  class="text-danger">
+                                  class="text-danger small">
                             </span>
 
                         </div>
 
                         <!-- Botones -->
-                        <div class="d-flex gap-2">
+                        <div class="d-flex flex-column flex-sm-row gap-2 form-actions">
 
                             <button type="submit"
                                     class="btn btn-primary px-4">

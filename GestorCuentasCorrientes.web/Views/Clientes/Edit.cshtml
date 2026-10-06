@@ -4,15 +4,32 @@
     ViewData["Title"] = "Editar Cliente";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h2>@ViewData["Title"]</h2>
-                </div>
+<div class="container-fluid px-0">
 
-                <div class="card-body">
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center mb-4">
+
+        <div class="page-header-icon me-3">
+            <i class="bi bi-pencil-square"></i>
+        </div>
+
+        <div>
+            <h1 class="h2 fw-bold mb-1 page-title">@ViewData["Title"]</h1>
+
+            <p class="text-muted mb-0">
+                Modificá los datos del cliente.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-xl-8">
+
+            <div class="card border-0 shadow-sm form-card">
+
+                <div class="card-body p-4">
+
                     <form asp-action="Edit" method="post" novalidate>
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
@@ -21,100 +38,138 @@
                         <input type="hidden" asp-for="FechaAlta">
                         <input type="hidden" asp-for="Activo">
 
-                        <!-- Razón Social -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="RazonSocial" 
-                                       class="form-control" 
-                                       placeholder="Ej: Empresa S.A.">
-                                <label asp-for="RazonSocial"></label>
+                        <!-- Datos principales -->
+                        <h2 class="form-section-title">
+                            <i class="bi bi-person-vcard"></i>
+                            Datos principales
+                        </h2>
+
+                        <div class="row">
+
+                            <!-- Razón Social -->
+                            <div class="col-md-7 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="RazonSocial"
+                                           class="form-control"
+                                           placeholder="Ej: Empresa S.A.">
+                                    <label asp-for="RazonSocial"></label>
+                                </div>
+                                <span asp-validation-for="RazonSocial" class="invalid-feedback d-block"></span>
                             </div>
-                            <span asp-validation-for="RazonSocial" class="invalid-feedback d-block"></span>
+
+                            <!-- CUIT/DNI -->
+                            <div class="col-md-5 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="CuitDni"
+                                           class="form-control"
+                                           placeholder="Ej: 20-12345678-9">
+                                    <label asp-for="CuitDni"></label>
+                                </div>
+                                <span asp-validation-for="CuitDni" class="invalid-feedback d-block"></span>
+                            </div>
+
                         </div>
 
-                        <!-- CUIT/DNI -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="CuitDni" 
-                                       class="form-control" 
-                                       placeholder="Ej: 20-12345678-9">
-                                <label asp-for="CuitDni"></label>
+                        <!-- Ubicación -->
+                        <h2 class="form-section-title mt-3">
+                            <i class="bi bi-geo-alt"></i>
+                            Ubicación
+                        </h2>
+
+                        <div class="row">
+
+                            <!-- Localidad -->
+                            <div class="col-md-5 mb-3">
+                                <div class="form-floating">
+                                    <select asp-for="LocalidadId"
+                                            class="form-select"
+                                            asp-items="(SelectList)ViewBag.LocalidadId">
+                                        <option value="">-- Seleccionar Localidad --</option>
+                                    </select>
+                                    <label asp-for="LocalidadId"></label>
+                                </div>
+                                <span asp-validation-for="LocalidadId" class="invalid-feedback d-block"></span>
                             </div>
-                            <span asp-validation-for="CuitDni" class="invalid-feedback d-block"></span>
+
+                            <!-- Dirección -->
+                            <div class="col-md-7 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Direccion"
+                                           class="form-control"
+                                           placeholder="Ej: Calle Principal 123">
+                                    <label asp-for="Direccion"></label>
+                                </div>
+                                <span asp-validation-for="Direccion" class="invalid-feedback d-block"></span>
+                            </div>
+
                         </div>
 
-                        <!-- Localidad -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <select asp-for="LocalidadId" 
-                                        class="form-select"
-                                        asp-items="(SelectList)ViewBag.LocalidadId">
-                                    <option value="">-- Seleccionar Localidad --</option>
-                                </select>
-                                <label asp-for="LocalidadId"></label>
-                            </div>
-                            <span asp-validation-for="LocalidadId" class="invalid-feedback d-block"></span>
-                        </div>
+                        <!-- Contacto -->
+                        <h2 class="form-section-title mt-3">
+                            <i class="bi bi-telephone"></i>
+                            Contacto
+                        </h2>
 
-                        <!-- Dirección -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="Direccion" 
-                                       class="form-control" 
-                                       placeholder="Ej: Calle Principal 123">
-                                <label asp-for="Direccion"></label>
-                            </div>
-                            <span asp-validation-for="Direccion" class="invalid-feedback d-block"></span>
-                        </div>
+                        <div class="row">
 
-                        <!-- Teléfono -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="Telefono" 
-                                       class="form-control" 
-                                       placeholder="Ej: (011) 4123-4567">
-                                <label asp-for="Telefono"></label>
+                            <!-- Teléfono -->
+                            <div class="col-md-5 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Telefono"
+                                           class="form-control"
+                                           placeholder="Ej: (011) 4123-4567">
+                                    <label asp-for="Telefono"></label>
+                                </div>
+                                <span asp-validation-for="Telefono" class="invalid-feedback d-block"></span>
                             </div>
-                            <span asp-validation-for="Telefono" class="invalid-feedback d-block"></span>
-                        </div>
 
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="Email" 
-                                       class="form-control" 
-                                       placeholder="Ej: contacto@empresa.com">
-                                <label asp-for="Email"></label>
+                            <!-- Email -->
+                            <div class="col-md-7 mb-3">
+                                <div class="form-floating">
+                                    <input asp-for="Email"
+                                           class="form-control"
+                                           placeholder="Ej: contacto@empresa.com">
+                                    <label asp-for="Email"></label>
+                                </div>
+                                <span asp-validation-for="Email" class="invalid-feedback d-block"></span>
                             </div>
-                            <span asp-validation-for="Email" class="invalid-feedback d-block"></span>
+
                         </div>
 
                         <!-- Fecha de Alta (solo lectura) -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input type="text" 
-                                       class="form-control" 
-                                       disabled
-                                       value="@Model.FechaAlta.ToString("dd/MM/yyyy HH:mm")">
-                                <label>Fecha de Alta</label>
+                        <h2 class="form-section-title mt-3">
+                            <i class="bi bi-calendar-check"></i>
+                            Registro
+                        </h2>
+
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <div class="form-floating">
+                                    <input type="text"
+                                           class="form-control"
+                                           disabled
+                                           value="@Model.FechaAlta.ToString("dd/MM/yyyy HH:mm")">
+                                    <label>Fecha de Alta</label>
+                                </div>
+                                <small class="form-text text-muted">Este campo no puede ser modificado.</small>
                             </div>
-                            <small class="form-text text-muted">Este campo no puede ser modificado.</small>
                         </div>
 
-                        <hr class="my-4">
-
                         <!-- Botones -->
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Guardar Cambios
+                        <div class="d-flex flex-column flex-sm-row gap-2 form-actions mt-3">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-circle me-1"></i> Guardar Cambios
                             </button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle"></i> Cancelar
+                            <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
                             </a>
                         </div>
                     </form>
+
                 </div>
+
             </div>
+
         </div>
     </div>
 </div>

@@ -1,31 +1,771 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    text-align: start;
+}
+/* ===== Home / Index ===== */
+
+.home-hero {
+    background: linear-gradient(135deg, #212529 0%, #2c3238 55%, #0b5ed7 160%);
+    color: #fff;
+    border-radius: 1rem;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 .5rem 1.25rem rgba(0, 0, 0, .15);
+}
+
+    .home-hero .home-hero-title {
+        letter-spacing: -.01em;
+    }
+
+    .home-hero .home-hero-subtitle {
+        color: rgba(255, 255, 255, .75);
+        max-width: 40rem;
+    }
+
+.module-card {
+    --accent: #0d6efd;
+    border-top: 4px solid var(--accent) !important;
+    border-radius: .75rem;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+    .module-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 .75rem 1.5rem rgba(0, 0, 0, .12) !important;
+    }
+
+.module-card--primary {
+    --accent: #0d6efd;
+}
+
+.module-card--secondary {
+    --accent: #6c757d;
+}
+
+.module-card--success {
+    --accent: #198754;
+}
+
+.module-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .875rem;
+}
+
+.module-icon--primary {
+    background: rgba(13, 110, 253, .12);
+}
+
+.module-icon--secondary {
+    background: rgba(108, 117, 125, .15);
+}
+
+.module-icon--success {
+    background: rgba(25, 135, 84, .12);
+}
+
+.module-card .btn {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    font-weight: 500;
+}
+
+.quick-access-card {
+    border-left: 4px solid #0d6efd !important;
+    border-radius: .75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .module-card {
+        transition: none;
+    }
+
+        .module-card:hover {
+            transform: none;
+        }
+}
+
+/* ===== Productos (Index / Create / Edit) ===== */
+
+.page-header-icon {
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .875rem;
+    background: rgba(13, 110, 253, .12);
+    color: #0d6efd;
+    font-size: 1.4rem;
+}
+
+.page-title {
+    letter-spacing: -.01em;
+}
+
+/* Tarjetas */
+.surface-card {
+    border-radius: .75rem;
+    overflow: hidden;
+}
+
+.filter-card .form-control {
+    padding: .6rem .9rem;
+}
+
+.filter-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .625rem;
+    background: rgba(13, 110, 253, .12);
+    color: #0d6efd;
+}
+
+/* Tabla */
+.table-products thead th {
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    border-bottom: 1px solid #e9ecef;
+    white-space: nowrap;
+}
+
+.table-products tbody td {
+    vertical-align: middle;
+    border-color: #f1f3f5;
+}
+
+.table-products tbody tr:hover {
+    background-color: #f5f9ff;
+}
+
+.product-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .625rem;
+    background: rgba(25, 135, 84, .12);
+    color: #198754;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.product-price {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.row-inactive .product-name,
+.row-inactive .product-price {
+    color: #8a9199;
+}
+
+.row-inactive .product-avatar {
+    background: rgba(108, 117, 125, .15);
+    color: #6c757d;
+}
+
+/* Estado */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .75rem;
+    border-radius: 50rem;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+    .status-pill::before {
+        content: "";
+        width: .5rem;
+        height: .5rem;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+.status-pill--active {
+    background: rgba(25, 135, 84, .12);
+    color: #146c43;
+}
+
+.status-pill--inactive {
+    background: rgba(220, 53, 69, .12);
+    color: #b02a37;
+}
+
+/* Botones de acción */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.btn-icon {
+    width: 2.1rem;
+    height: 2.1rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .5rem;
+}
+
+/* Formularios (Create / Edit) */
+.form-card {
+    border-radius: .75rem;
+    border-top: 4px solid #0d6efd !important;
+}
+
+    .form-card .form-label {
+        font-weight: 600;
+        font-size: .9rem;
+    }
+
+    .form-card .form-control {
+        padding: .65rem .9rem;
+        border-radius: .5rem;
+    }
+
+        .form-card .form-control:focus {
+            box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+        }
+
+.form-actions {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1.25rem;
+}
+
+/* ===== Presupuestos (Index / Details / Create) ===== */
+
+.status-pill--neutral {
+    background: rgba(108, 117, 125, .15);
+    color: #495057;
+}
+
+.doc-number {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: #0d6efd;
+    background: rgba(13, 110, 253, .08);
+    padding: .25rem .6rem;
+    border-radius: .5rem;
+    white-space: nowrap;
+}
+
+.client-cell {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 500;
+}
+
+    .client-cell i {
+        color: #6c757d;
+    }
+
+/* Tarjetas con encabezado de sección */
+.section-card {
+    border-radius: .75rem;
+    overflow: hidden;
+}
+
+    .section-card .card-header {
+        background: #fff;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 1.5rem;
+    }
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+    .section-title i {
+        color: #0d6efd;
+    }
+
+/* Datos (Details) */
+.info-label {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #6c757d;
+    margin-bottom: .2rem;
+}
+
+.info-value {
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.info-multiline {
+    white-space: pre-line;
+}
+
+.info-notes {
+    background: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+    border-radius: .5rem;
+    padding: 1rem 1.25rem;
+}
+
+/* Tabla de conceptos (Details y Create) */
+.table-detalles {
+    min-width: 720px;
+}
+
+    .table-detalles tbody td {
+        padding: .85rem 1rem;
+    }
+
+    .table-detalles thead th {
+        padding: .85rem 1rem;
+    }
+
+    .table-detalles .form-control,
+    .table-detalles .form-select {
+        border-radius: .5rem;
+    }
+
+    .table-detalles .precio {
+        background: #f8f9fa;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .table-detalles .cantidad {
+        text-align: right;
+    }
+
+    .table-detalles .subtotal {
+        display: block;
+        text-align: right;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    /* Botón Eliminar (también aplica a las filas creadas por JS) */
+    .table-detalles .btnEliminarDetalle {
+        background: transparent;
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, .45);
+        border-radius: .5rem;
+        font-weight: 500;
+    }
+
+        .table-detalles .btnEliminarDetalle:hover {
+            background: #dc3545;
+            color: #fff;
+            border-color: #dc3545;
+        }
+
+/* Totales */
+.table-totals tfoot th {
+    background: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+    padding: 1rem;
+    font-size: 1rem;
+}
+
+    .table-totals tfoot th:last-child {
+        color: #0d6efd;
+        font-size: 1.15rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+.total-box {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .75rem;
+    background: rgba(13, 110, 253, .06);
+    border: 1px solid rgba(13, 110, 253, .18);
+    border-radius: .75rem;
+    padding: .75rem 1.25rem;
+}
+
+    .total-box .total-label {
+        font-size: .75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #6c757d;
+    }
+
+    .total-box h4 {
+        color: #0d6efd;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+/* Foco suave en formularios con section-card */
+.section-card .form-label {
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.section-card .form-control:focus,
+.section-card .form-select:focus {
+    box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+}
+
+/* ===== Clientes (Index / Details / Edit / Create) ===== */
+
+/* Filtros con form-floating */
+.filter-card .form-floating > .form-control,
+.filter-card .form-floating > .form-select {
+    border-radius: .5rem;
+}
+
+    .filter-card .form-floating > .form-control:focus,
+    .filter-card .form-floating > .form-select:focus {
+        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+    }
+
+.filter-card .filter-actions .btn {
+    height: calc(3.5rem + 2px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Celda de cliente en la tabla */
+.cliente-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(13, 110, 253, .12);
+    color: #0d6efd;
+    font-size: 1.15rem;
+}
+
+.row-inactive .cliente-avatar {
+    background: rgba(108, 117, 125, .15);
+    color: #6c757d;
+}
+
+.cliente-nombre {
+    font-weight: 600;
+    color: #212529;
+}
+
+.cliente-email {
+    font-size: .8rem;
+    color: #6c757d;
+}
+
+/* Estado vacío */
+.empty-state {
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(108, 117, 125, .12);
+    color: #6c757d;
+    font-size: 2rem;
+}
+
+/* Detalle del cliente */
+.info-value-lg {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.saldo-box {
+    border-radius: .75rem;
+    padding: 1.5rem;
+    border: 1px solid transparent;
+    border-left-width: 6px;
+}
+
+    .saldo-box .saldo-label {
+        font-size: .72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: .25rem;
+        opacity: .8;
+    }
+
+    .saldo-box .saldo-amount {
+        font-size: 2rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+        margin-bottom: .25rem;
+    }
+
+.saldo-box--debe {
+    background: #fff8e1;
+    border-color: #ffe08a;
+    border-left-color: #ffc107;
+    color: #7a5b00;
+}
+
+.saldo-box--cero {
+    background: #e8f6f9;
+    border-color: #a8dde7;
+    border-left-color: #17a2b8;
+    color: #0c5460;
+}
+
+.saldo-box--favor {
+    background: #fdecee;
+    border-color: #f1b0b7;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.table-movs tbody td {
+    white-space: nowrap;
+}
+
+.amount-plus {
+    color: #dc3545;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.amount-minus {
+    color: #198754;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.row-anulado td {
+    background-color: #f1f3f5;
+    color: #8a9199;
+}
+
+/* Formularios de cliente */
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #6c757d;
+    margin: 0 0 1rem;
+}
+
+    .form-section-title i {
+        color: #0d6efd;
+    }
+
+    .form-section-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e9ecef;
+    }
+
+.form-card .form-floating > .form-control,
+.form-card .form-floating > .form-select {
+    border-radius: .5rem;
+}
+
+    .form-card .form-floating > .form-control:focus,
+    .form-card .form-floating > .form-select:focus {
+        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+    }
+
+.form-card .invalid-feedback {
+    font-size: .8rem;
+}
+
+/* ===== Movimientos (Create) ===== */
+
+/* Cliente preseleccionado */
+.client-readonly {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .75rem;
+    padding: .85rem 1rem;
+}
+
+/* Sección de líneas de pago */
+.pagos-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .75rem;
+    padding: 1.5rem;
+}
+
+    .pagos-section .pagos-title {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+    }
+
+        .pagos-section .pagos-title i {
+            color: #0d6efd;
+        }
+
+/* Cada línea de pago (servidor y JS) */
+.pago-row {
+    border: 1px solid #e9ecef !important;
+    border-radius: .75rem;
+    overflow: hidden;
+}
+
+    .pago-row .card-header {
+        background: #fff !important;
+        border-bottom: 1px solid #e9ecef !important;
+        padding: .75rem 1.25rem !important;
+    }
+
+        .pago-row .card-header > span {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+    .pago-row .numero-linea {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.6rem;
+        height: 1.6rem;
+        padding: 0 .4rem;
+        border-radius: .5rem;
+        background: rgba(13, 110, 253, .1);
+        color: #0d6efd;
+        font-weight: 700;
+    }
+
+    .pago-row .card-body {
+        padding: 1.25rem;
+    }
+
+    .pago-row .btn-eliminar {
+        width: 2.1rem;
+        height: 2.1rem;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .5rem;
+    }
+
+    .pago-row .form-label {
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    .pago-row .form-control,
+    .pago-row .form-select {
+        border-radius: .5rem;
+    }
+
+        .pago-row .form-control:focus,
+        .pago-row .form-select:focus {
+            box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+        }
+
+    /* Datos del cheque */
+    .pago-row .bloque-cheque > div {
+        background: rgba(13, 202, 240, .07);
+        border-radius: .5rem;
+        padding: 1rem 1.25rem !important;
+    }
+
+/* Botón agregar línea */
+#btnAgregarPago {
+    border-style: dashed;
+    border-width: 2px;
+    border-radius: .5rem;
+    font-weight: 500;
+    padding: .55rem 1.25rem;
+}
+
+/* Adjunto */
+.upload-box {
+    border: 2px dashed #ced4da;
+    border-radius: .75rem;
+    background: #fafbfc;
+    padding: 1.25rem;
+}
+
+    .upload-box .form-control {
+        background: #fff;
+    }
+
+@media (max-width: 575.98px) {
+    .pagos-section {
+        padding: 1rem;
+    }
 }
