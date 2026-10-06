@@ -573,5 +573,58 @@ namespace GestorCuentasCorrientes.web.Controllers
 
             ViewBag.Productos = productos;
         }
+
+        //Gestionar presupuestos, Aprobado, rechazado.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Aceptar(int id)
+        {
+            var presupuesto = await _context.Presupuestos
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (presupuesto == null)
+                return NotFound();
+
+            if (presupuesto.Estado != "Pendiente")
+            {
+                return RedirectToAction(
+                    nameof(Details),
+                    new { id = presupuesto.Id });
+            }
+
+            presupuesto.Estado = "Aprobado";
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(
+                nameof(Details),
+                new { id = presupuesto.Id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Rechazar(int id)
+        {
+            var presupuesto = await _context.Presupuestos
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (presupuesto == null)
+                return NotFound();
+
+            if (presupuesto.Estado != "Pendiente")
+            {
+                return RedirectToAction(
+                    nameof(Details),
+                    new { id = presupuesto.Id });
+            }
+
+            presupuesto.Estado = "Rechazado";
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(
+                nameof(Details),
+                new { id = presupuesto.Id });
+        }
     }
 }

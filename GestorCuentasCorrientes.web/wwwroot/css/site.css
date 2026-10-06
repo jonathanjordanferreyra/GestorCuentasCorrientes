@@ -46,6 +46,7 @@ body {
     .home-hero .home-hero-subtitle {
         color: rgba(255, 255, 255, .75);
         max-width: 40rem;
+        margin: 0 auto;
     }
 
 .module-card {
