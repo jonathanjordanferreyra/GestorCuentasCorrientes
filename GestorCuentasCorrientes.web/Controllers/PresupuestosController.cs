@@ -195,6 +195,7 @@ namespace GestorCuentasCorrientes.web.Controllers
                 .Include(p => p.Cliente)
                 .Include(p => p.Usuario)
                 .Include(p => p.Detalles)
+                .Include(p => p.Movimiento)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -625,6 +626,34 @@ namespace GestorCuentasCorrientes.web.Controllers
             return RedirectToAction(
                 nameof(Details),
                 new { id = presupuesto.Id });
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Anular(int id)
+        {
+            var presupuesto = await _context.Presupuestos
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (presupuesto == null)
+                return NotFound();
+
+            // Si ya generó un movimiento, no se puede anular
+            var tieneMovimiento = await _context.Movimientos
+                .AnyAsync(m => m.PresupuestoId == id);
+
+            if (tieneMovimiento)
+                return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
+
+            // Solo se puede anular un presupuesto Pendiente o Aprobado
+            if (presupuesto.Estado != "Pendiente" && presupuesto.Estado != "Aprobado")
+            {
+                return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
+            }
+
+            presupuesto.Estado = "Anulado";
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
         }
     }
 }

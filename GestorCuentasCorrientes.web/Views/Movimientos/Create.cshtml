@@ -33,6 +33,17 @@
 
                     <form asp-action="Create" method="post" enctype="multipart/form-data">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <input type="hidden" asp-for="PresupuestoId" />
+
+@if (Model.PresupuestoId.HasValue)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-file-earmark-text me-1"></i>
+        Este movimiento se genera a partir del
+        <strong>Presupuesto N.º @Model.PresupuestoId</strong>.
+        Cargá el número de la factura emitida y confirmá el importe.
+    </div>
+}
 
                         <!-- Datos del movimiento -->
                         <h2 class="form-section-title">

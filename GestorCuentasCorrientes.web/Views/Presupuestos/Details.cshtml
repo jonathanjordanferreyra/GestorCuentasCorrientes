@@ -35,55 +35,91 @@
 
         <div class="d-flex flex-column flex-sm-row gap-2 mt-3 mt-md-0">
 
-    @if (Model.Estado == "Pendiente")
-    {
-        <form asp-controller="Presupuestos"
-              asp-action="Aceptar"
-              asp-route-id="@Model.Id"
-              method="post"
-              class="d-inline">
+            @if (Model.Estado == "Pendiente")
+            {
+                <form asp-controller="Presupuestos"
+                      asp-action="Aceptar"
+                      asp-route-id="@Model.Id"
+                      method="post"
+                      class="d-inline">
 
-            <button type="submit"
-                    class="btn btn-success px-4 shadow-sm">
-                <i class="bi bi-check-circle me-1"></i>
-                Aceptar presupuesto
-            </button>
+                    <button type="submit"
+                            class="btn btn-success px-4 shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Aceptar presupuesto
+                    </button>
 
-        </form>
+                </form>
 
-        <form asp-controller="Presupuestos"
-              asp-action="Rechazar"
-              asp-route-id="@Model.Id"
-              method="post"
-              class="d-inline">
+                <form asp-controller="Presupuestos"
+                      asp-action="Rechazar"
+                      asp-route-id="@Model.Id"
+                      method="post"
+                      class="d-inline">
 
-            <button type="submit"
-        class="btn btn-outline-danger px-4"
-        onclick="return confirm('¿Está seguro de que desea rechazar este presupuesto?');">
-    <i class="bi bi-x-circle me-1"></i>
-    Rechazar
-</button>
+                    <button type="submit"
+                            class="btn btn-outline-danger px-4"
+                            onclick="return confirm('¿Está seguro de que desea rechazar este presupuesto?');">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Rechazar
+                    </button>
 
-        </form>
-    }
+                </form>
+            }
 
-    <a asp-controller="Presupuestos"
-       asp-action="Pdf"
-       asp-route-id="@Model.Id"
-       class="btn btn-danger px-4 shadow-sm">
-        <i class="bi bi-file-earmark-pdf me-1"></i>
-        Descargar PDF
+            @if (Model.Estado == "Aprobado" && Model.Movimiento == null)
+{
+    <a asp-controller="Movimientos"
+       asp-action="Create"
+       asp-route-clienteId="@Model.ClienteId"
+       asp-route-presupuestoId="@Model.Id"
+       class="btn btn-primary px-4 shadow-sm">
+        <i class="bi bi-receipt me-1"></i>
+        Generar movimiento
     </a>
+}
+else if (Model.Movimiento != null)
+{
+    <span class="btn btn-outline-success px-4 disabled">
+        <i class="bi bi-check2-circle me-1"></i>
+        Movimiento generado
+    </span>
+}
 
-    <a asp-controller="Clientes"
-       asp-action="Details"
-       asp-route-id="@Model.ClienteId"
-       class="btn btn-outline-secondary px-4">
-        <i class="bi bi-arrow-left me-1"></i>
-        Volver al cliente
-    </a>
+            @if ((Model.Estado == "Pendiente" || Model.Estado == "Aprobado") && Model.Movimiento == null)
+            {
+                <form asp-controller="Presupuestos"
+                      asp-action="Anular"
+                      asp-route-id="@Model.Id"
+                      method="post"
+                      class="d-inline">
 
-</div>
+                    <button type="submit"
+                            class="btn btn-outline-secondary px-4"
+                            onclick="return confirm('¿Está seguro de que desea anular este presupuesto?');">
+                        <i class="bi bi-slash-circle me-1"></i>
+                        Anular
+                    </button>
+                </form>
+            }
+
+            <a asp-controller="Presupuestos"
+               asp-action="Pdf"
+               asp-route-id="@Model.Id"
+               class="btn btn-danger px-4 shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+                Descargar PDF
+            </a>
+
+            <a asp-controller="Clientes"
+               asp-action="Details"
+               asp-route-id="@Model.ClienteId"
+               class="btn btn-outline-secondary px-4">
+                <i class="bi bi-arrow-left me-1"></i>
+                Volver al cliente
+            </a>
+
+        </div>
 
     </div>
 
@@ -250,7 +286,7 @@
                                 </td>
 
                                 <td class="text-end">
-                                    @detalle.Cantidad
+                                    @detalle.Cantidad.ToString("N2")
                                 </td>
 
                                 <td class="text-end">

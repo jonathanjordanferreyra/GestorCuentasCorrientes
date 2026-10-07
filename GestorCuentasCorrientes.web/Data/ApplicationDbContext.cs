@@ -166,6 +166,12 @@ namespace GestorCuentasCorrientes.web.Data
                     .WithOne(c => c.Movimiento)
                     .HasForeignKey(c => c.MovimientoId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                // Relación con Presupuesto (1:1 opcional)
+                entity.HasOne(m => m.Presupuesto)
+                    .WithOne(p => p.Movimiento)
+                    .HasForeignKey<Movimiento>(m => m.PresupuestoId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // ===== PAGO =====

@@ -30,7 +30,7 @@ namespace GestorCuentasCorrientes.web.Models
 
         public Cliente? Cliente { get; set; }
         public Usuario? Usuario { get; set; }
-
+        public Movimiento? Movimiento { get; set; }
         public ICollection<PresupuestoDetalle> Detalles { get; set; } = new List<PresupuestoDetalle>();
     }
 }

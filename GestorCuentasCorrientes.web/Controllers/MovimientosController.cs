@@ -36,13 +36,12 @@ namespace GestorCuentasCorrientes.web.Controllers
 
 
         // GET: Movimientos/Create
-        public async Task<IActionResult> Create(int clienteId)
+        public async Task<IActionResult> Create(int clienteId, int? presupuestoId)
         {
             var cliente = await _context.Clientes.FindAsync(clienteId);
             if (cliente == null)
                 return NotFound();
 
-            // Usar MovimientoRecibosCreateVm para soportar tanto movimientos simples como Recibos
             var viewModel = new MovimientoRecibosCreateVm
             {
                 Fecha = DateTime.Now,
@@ -50,21 +49,43 @@ namespace GestorCuentasCorrientes.web.Controllers
                 ClienteNombre = cliente.RazonSocial
             };
 
-            // Cargar todos los tipos de movimiento (incluyendo REC ahora)
-            ViewBag.TiposMovimiento = new SelectList(
-                await _context.TiposMovimiento
-                    .OrderBy(tm => tm.Nombre)
-                    .ToListAsync(),
-                "Id",
-                "Nombre");
+            // Si viene de un presupuesto, precargamos los datos
+            if (presupuestoId.HasValue)
+            {
+                var presupuesto = await _context.Presupuestos
+                    .Include(p => p.Detalles)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == presupuestoId.Value);
 
-            // Cargar medios de pago para los recibos
-            ViewBag.MediosPago = new SelectList(
-                await _context.MediosPago
-                    .OrderBy(mp => mp.Nombre)
-                    .ToListAsync(),
-                "Id",
-                "Nombre");
+                if (presupuesto == null)
+                    return NotFound();
+
+                var yaConvertido = await _context.Movimientos
+                    .AnyAsync(m => m.PresupuestoId == presupuesto.Id);
+
+                // Solo se puede generar desde un presupuesto Aprobado, del mismo cliente
+                // y que todavía no tenga movimiento
+                if (presupuesto.ClienteId != cliente.Id ||
+                    presupuesto.Estado != "Aprobado" ||
+                    yaConvertido)
+                {
+                    return RedirectToAction("Details", "Presupuestos", new { id = presupuesto.Id });
+                }
+
+                var tipoFactura = await _context.TiposMovimiento
+                    .FirstOrDefaultAsync(t => t.Codigo == "FACT");
+
+                if (tipoFactura == null)
+                    return NotFound();
+
+                viewModel.PresupuestoId = presupuesto.Id;
+                viewModel.TipoMovimientoId = tipoFactura.Id;
+                viewModel.Importe = Math.Round(
+                    presupuesto.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario), 2);
+                viewModel.Observaciones = $"Generado desde el Presupuesto N.º {presupuesto.Id}";
+            }
+
+            await CargarCombosAsync(viewModel.TipoMovimientoId);
 
             return View(viewModel);
         }
@@ -173,6 +194,39 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return View(viewModel);
             }
 
+            // ============================================
+            // Validaciones cuando el movimiento viene de un Presupuesto
+            // ============================================
+            if (viewModel.PresupuestoId.HasValue)
+            {
+                var presupuestoOrigen = await _context.Presupuestos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == viewModel.PresupuestoId.Value);
+
+                if (presupuestoOrigen == null)
+                    return NotFound();
+
+                var yaConvertido = await _context.Movimientos
+                    .AnyAsync(m => m.PresupuestoId == presupuestoOrigen.Id);
+
+                // Se manipuló el formulario o el estado cambió mientras estaba abierto
+                if (presupuestoOrigen.ClienteId != viewModel.ClienteId ||
+                    presupuestoOrigen.Estado != "Aprobado" ||
+                    yaConvertido)
+                {
+                    return RedirectToAction("Details", "Presupuestos", new { id = presupuestoOrigen.Id });
+                }
+
+                // Un presupuesto solo genera Facturas
+                if (tipoMovimiento.Codigo != "FACT")
+                {
+                    ModelState.AddModelError("", "Un presupuesto solo puede generar un movimiento de tipo Factura.");
+                    viewModel.ClienteNombre = cliente.RazonSocial;
+                    await CargarCombosAsync(viewModel.TipoMovimientoId);
+                    return View(viewModel);
+                }
+            }
+
             // Evitar cargar dos veces el mismo comprobante para el mismo tipo de movimiento
             if (!string.IsNullOrWhiteSpace(viewModel.NumeroComprobante))
             {
@@ -240,7 +294,8 @@ namespace GestorCuentasCorrientes.web.Controllers
                 Observaciones = viewModel.Observaciones,
                 UsuarioId = usuarioId,
                 FechaRegistro = DateTime.Now,
-                Anulado = false
+                Anulado = false,
+                PresupuestoId = viewModel.PresupuestoId,
             };
 
             _context.Movimientos.Add(movimiento);
@@ -594,6 +649,17 @@ namespace GestorCuentasCorrientes.web.Controllers
             return File(fileStream, contentType, comprobante.NombreArchivo);
         }
 
+        private async Task CargarCombosAsync(int? tipoMovimientoId = null)
+        {
+            ViewBag.TiposMovimiento = new SelectList(
+                await _context.TiposMovimiento.OrderBy(tm => tm.Nombre).ToListAsync(),
+                "Id", "Nombre", tipoMovimientoId);
+
+            ViewBag.MediosPago = new SelectList(
+                await _context.MediosPago.OrderBy(mp => mp.Nombre).ToListAsync(),
+                "Id", "Nombre");
+        }
+
         // Método helper para obtener el content-type
         private string ObtenerContentType(string? extension)
         {
@@ -612,5 +678,6 @@ namespace GestorCuentasCorrientes.web.Controllers
             };
 
         }
+
     }
 }

@@ -36,5 +36,7 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
         [Display(Name = "Archivo Comprobante")]
         [DataType(DataType.Upload)]
         public IFormFile? ArchivoComprobante { get; set; }
+
+        public int? PresupuestoId { get; set; }
     }
 }

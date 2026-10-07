@@ -42,11 +42,14 @@ namespace GestorCuentasCorrientes.web.Models
 
         [Display(Name = "Movimiento Origen")]
         public int? MovimientoOrigenId { get; set; }
+        [Display(Name = "Presupuesto")]
+        public int? PresupuestoId { get; set; }
 
         // Propiedades de navegación
         public Cliente? Cliente { get; set; }
         public TipoMovimiento? TipoMovimiento { get; set; }
         public Usuario? Usuario { get; set; }
+        public Presupuesto? Presupuesto { get; set; }
 
         // Auto-referencia: movimiento que da origen a este (ej: factura original de una nota de crédito)
         public Movimiento? MovimientoOrigen { get; set; }
