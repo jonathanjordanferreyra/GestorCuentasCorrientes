@@ -66,7 +66,7 @@
                     <input type="text"
                            name="searchTerm"
                            class="form-control"
-                           placeholder="Nombre del producto..."
+                           placeholder="Nombre o código del producto..."
                            value="@ViewBag.SearchTerm">
                 </div>
 
@@ -100,7 +100,9 @@
 
                         <thead>
                             <tr>
+                                <th scope="col" class="px-4 py-3">Código</th>
                                 <th scope="col" class="px-4 py-3">Producto</th>
+                                <th scope="col" class="px-4 py-3">Unidad</th>
                                 <th scope="col" class="px-4 py-3 text-end">Precio Unitario</th>
                                 <th scope="col" class="px-4 py-3">Estado</th>
                                 <th scope="col" class="px-4 py-3 text-end">Acciones</th>
@@ -111,6 +113,11 @@
                             @foreach (var producto in Model)
                             {
                                 <tr class="@(producto.Activo ? "" : "row-inactive")">
+
+                                    <td class="px-4 py-3 text-muted">
+                                        @(producto.Codigo ?? "—")
+                                    </td>
+
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center">
                                             <div class="product-avatar me-3">
@@ -118,6 +125,10 @@
                                             </div>
                                             <span class="product-name">@producto.Nombre</span>
                                         </div>
+                                    </td>
+
+                                    <td class="px-4 py-3">
+                                        @producto.UnidadMedida
                                     </td>
 
                                     <td class="px-4 py-3 text-end">

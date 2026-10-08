@@ -44,6 +44,23 @@
                              class="text-danger mb-3">
                         </div>
 
+                        <!-- Código -->
+<div class="mb-3">
+
+    <label asp-for="Codigo"
+           class="form-label">
+    </label>
+
+    <input asp-for="Codigo"
+           class="form-control"
+           placeholder="Opcional. Ej: PRD-001" />
+
+    <span asp-validation-for="Codigo"
+          class="text-danger small">
+    </span>
+
+</div>
+
                         <!-- Nombre -->
                         <div class="mb-3">
 
@@ -60,6 +77,24 @@
                             </span>
 
                         </div>
+
+                        <!-- Unidad de medida -->
+<div class="mb-3">
+
+    <label asp-for="UnidadMedida"
+           class="form-label">
+    </label>
+
+    <select asp-for="UnidadMedida"
+            asp-items="ViewBag.Unidades"
+            class="form-select">
+    </select>
+
+    <span asp-validation-for="UnidadMedida"
+          class="text-danger small">
+    </span>
+
+</div>
 
                         <!-- Precio -->
                         <div class="mb-4">

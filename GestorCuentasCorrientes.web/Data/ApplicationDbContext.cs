@@ -260,6 +260,7 @@ namespace GestorCuentasCorrientes.web.Data
                     .WithMany()
                     .HasForeignKey(p => p.UsuarioId)
                     .OnDelete(DeleteBehavior.Restrict);
+
             });
 
             modelBuilder.Entity<PresupuestoDetalle>(entity =>
@@ -274,6 +275,11 @@ namespace GestorCuentasCorrientes.web.Data
                     .WithMany(p => p.Detalles)
                     .HasForeignKey(d => d.PresupuestoId);
 
+                entity.HasOne(d => d.Producto)
+                    .WithMany(p => p.PresupuestoDetalles)
+                    .HasForeignKey(d => d.ProductoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 // Sin Restrict acá a propósito: como nunca vas a tener un DELETE real de
                 // Presupuesto desde la app (solo "Anular"), no hace falta bloquear el
                 // cascade.
@@ -284,6 +290,12 @@ namespace GestorCuentasCorrientes.web.Data
             {
                 entity.Property(p => p.PrecioUnitario)
                     .HasPrecision(18, 2);
+                entity.Property(p => p.UnidadMedida)
+                      .HasDefaultValue("Unidad");
+
+                entity.HasIndex(p => p.Codigo)
+                      .IsUnique()
+                      .HasFilter("[Codigo] IS NOT NULL");
             });
         }
     }

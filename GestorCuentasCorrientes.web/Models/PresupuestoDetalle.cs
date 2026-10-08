@@ -23,7 +23,10 @@ namespace GestorCuentasCorrientes.web.Models
 
         [Display(Name = "Presupuesto")]
         public int PresupuestoId { get; set; }
+        [Display(Name = "Producto")]
+        public int? ProductoId { get; set; }
 
+        public Producto? Producto { get; set; }
         public Presupuesto? Presupuesto { get; set; }
     }
 }

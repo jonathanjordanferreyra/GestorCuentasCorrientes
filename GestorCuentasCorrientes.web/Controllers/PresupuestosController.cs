@@ -123,6 +123,7 @@ namespace GestorCuentasCorrientes.web.Controllers
                         "Detalles",
                         "Uno de los productos seleccionados no existe o está inactivo.");
                 }
+
             }
 
             if (!ModelState.IsValid)
@@ -168,6 +169,7 @@ namespace GestorCuentasCorrientes.web.Controllers
 
                 var detalle = new PresupuestoDetalle
                 {
+                    ProductoId = producto.Id,
                     Descripcion = producto.Nombre,
                     Cantidad = detalleVm.Cantidad,
                     PrecioUnitario = producto.PrecioUnitario

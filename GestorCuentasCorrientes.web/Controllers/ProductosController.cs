@@ -2,6 +2,7 @@ using GestorCuentasCorrientes.web.Data;
 using GestorCuentasCorrientes.web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestorCuentasCorrientes.web.Controllers
@@ -21,13 +22,14 @@ namespace GestorCuentasCorrientes.web.Controllers
         {
             IQueryable<Producto> query = _context.Productos.AsNoTracking();
 
-            // Filtro por búsqueda: Nombre
+            // Filtro por búsqueda: Nombre o Código
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(p => p.Nombre.Contains(searchTerm));
+                query = query.Where(p =>
+                    p.Nombre.Contains(searchTerm) ||
+                    (p.Codigo != null && p.Codigo.Contains(searchTerm)));
             }
 
-            // Ordenar por Nombre
             var productos = await query.OrderBy(p => p.Nombre).ToListAsync();
 
             ViewBag.SearchTerm = searchTerm;
@@ -38,17 +40,21 @@ namespace GestorCuentasCorrientes.web.Controllers
         // GET: Productos/Create
         public IActionResult Create()
         {
-            return View();
+            CargarUnidades();
+            return View(new Producto());
         }
 
         // POST: Productos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Nombre,PrecioUnitario")] Producto producto)
+        public async Task<IActionResult> Create(
+            [Bind("Codigo,Nombre,UnidadMedida,PrecioUnitario")] Producto producto)
         {
+            producto.Codigo = LimpiarCodigo(producto.Codigo);
+            await ValidarProductoAsync(producto);
+
             if (ModelState.IsValid)
             {
-                // Asignar valor por defecto
                 producto.Activo = true;
 
                 _context.Add(producto);
@@ -57,6 +63,7 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            CargarUnidades(producto.UnidadMedida);
             return View(producto);
         }
 
@@ -71,16 +78,22 @@ namespace GestorCuentasCorrientes.web.Controllers
             if (producto == null)
                 return NotFound();
 
+            CargarUnidades(producto.UnidadMedida);
             return View(producto);
         }
 
         // POST: Productos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,PrecioUnitario")] Producto producto)
+        public async Task<IActionResult> Edit(
+            int id,
+            [Bind("Id,Codigo,Nombre,UnidadMedida,PrecioUnitario")] Producto producto)
         {
             if (id != producto.Id)
                 return NotFound();
+
+            producto.Codigo = LimpiarCodigo(producto.Codigo);
+            await ValidarProductoAsync(producto);
 
             if (ModelState.IsValid)
             {
@@ -89,7 +102,9 @@ namespace GestorCuentasCorrientes.web.Controllers
                 if (productoExistente == null)
                     return NotFound();
 
+                productoExistente.Codigo = producto.Codigo;
                 productoExistente.Nombre = producto.Nombre;
+                productoExistente.UnidadMedida = producto.UnidadMedida;
                 productoExistente.PrecioUnitario = producto.PrecioUnitario;
 
                 await _context.SaveChangesAsync();
@@ -97,6 +112,7 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            CargarUnidades(producto.UnidadMedida);
             return View(producto);
         }
 
@@ -115,6 +131,40 @@ namespace GestorCuentasCorrientes.web.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private void CargarUnidades(string? seleccionada = null)
+        {
+            ViewBag.Unidades = new SelectList(Producto.Unidades, seleccionada);
+        }
+
+        // Código vacío → null (así no choca con el índice único)
+        private static string? LimpiarCodigo(string? codigo) =>
+            string.IsNullOrWhiteSpace(codigo) ? null : codigo.Trim();
+
+        private async Task ValidarProductoAsync(Producto producto)
+        {
+            // Evita que alguien manipule el formulario con una unidad inventada
+            if (!Producto.Unidades.Contains(producto.UnidadMedida))
+            {
+                ModelState.AddModelError(
+                    nameof(producto.UnidadMedida),
+                    "Seleccioná una unidad de medida válida.");
+            }
+
+            // Mensaje claro antes de que lo frene el índice único de la base
+            if (producto.Codigo != null)
+            {
+                var codigoEnUso = await _context.Productos
+                    .AnyAsync(p => p.Codigo == producto.Codigo && p.Id != producto.Id);
+
+                if (codigoEnUso)
+                {
+                    ModelState.AddModelError(
+                        nameof(producto.Codigo),
+                        "Ya existe un producto con ese código.");
+                }
+            }
         }
 
         private bool ProductoExists(int id)
