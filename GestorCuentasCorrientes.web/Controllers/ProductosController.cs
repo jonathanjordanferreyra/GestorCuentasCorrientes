@@ -1,5 +1,6 @@
 using GestorCuentasCorrientes.web.Data;
 using GestorCuentasCorrientes.web.Models;
+using GestorCuentasCorrientes.web.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,6 +11,8 @@ namespace GestorCuentasCorrientes.web.Controllers
     [Authorize]
     public class ProductosController : Controller
     {
+        private const int TamanoPagina = 10;
+
         private readonly ApplicationDbContext _context;
 
         public ProductosController(ApplicationDbContext context)
@@ -18,7 +21,7 @@ namespace GestorCuentasCorrientes.web.Controllers
         }
 
         // GET: Productos
-        public async Task<IActionResult> Index(string? searchTerm)
+        public async Task<IActionResult> Index(string? searchTerm, int page = 1)
         {
             IQueryable<Producto> query = _context.Productos.AsNoTracking();
 
@@ -30,9 +33,36 @@ namespace GestorCuentasCorrientes.web.Controllers
                     (p.Codigo != null && p.Codigo.Contains(searchTerm)));
             }
 
-            var productos = await query.OrderBy(p => p.Nombre).ToListAsync();
+            // Paginación
+            var totalItems = await query.CountAsync();
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalItems / (double)TamanoPagina));
+            page = Math.Clamp(page, 1, totalPaginas);
+
+            var productos = await query
+                .OrderBy(p => p.Nombre)
+                .ThenBy(p => p.Id)
+                .Skip((page - 1) * TamanoPagina)
+                .Take(TamanoPagina)
+                .ToListAsync();
+
+            // En cuántos presupuestos distintos se usó cada producto de esta página
+            var ids = productos.Select(p => p.Id).ToList();
+
+            var uso = await _context.PresupuestoDetalles
+                .Where(d => d.ProductoId.HasValue && ids.Contains(d.ProductoId.Value))
+                .GroupBy(d => d.ProductoId!.Value)
+                .Select(g => new
+                {
+                    ProductoId = g.Key,
+                    Cantidad = g.Select(d => d.PresupuestoId).Distinct().Count()
+                })
+                .ToDictionaryAsync(x => x.ProductoId, x => x.Cantidad);
 
             ViewBag.SearchTerm = searchTerm;
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPaginas;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.Uso = uso;
 
             return View(productos);
         }
@@ -131,6 +161,83 @@ namespace GestorCuentasCorrientes.web.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Productos/ActualizarPrecios
+        [Authorize(Roles = "Admin")]
+        public IActionResult ActualizarPrecios()
+        {
+            return View(new ActualizarPreciosVm());
+        }
+
+        // POST: Productos/ActualizarPrecios
+        // accion = "vista" (solo muestra el resultado) o "aplicar" (guarda los cambios)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ActualizarPrecios(ActualizarPreciosVm vm, string? accion)
+        {
+            if (vm.Porcentaje == 0)
+            {
+                ModelState.AddModelError(nameof(vm.Porcentaje), "El porcentaje no puede ser 0.");
+            }
+
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var query = _context.Productos.AsQueryable();
+
+            if (vm.SoloActivos)
+                query = query.Where(p => p.Activo);
+
+            var productos = await query
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            if (productos.Count == 0)
+            {
+                ModelState.AddModelError("", "No hay productos para actualizar con ese criterio.");
+                return View(vm);
+            }
+
+            var factor = 1 + (vm.Porcentaje / 100m);
+
+            // APLICAR: se recalcula acá, en el servidor, con los precios de este momento
+            if (accion == "aplicar")
+            {
+                foreach (var p in productos)
+                {
+                    p.PrecioUnitario = CalcularNuevoPrecio(p.PrecioUnitario, factor);
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["Mensaje"] =
+                    $"Se actualizó el precio de {productos.Count} producto(s) ({vm.Porcentaje:+#;-#}%).";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            // VISTA PREVIA: no se guarda nada
+            vm.Vista = productos
+                .Select(p => new PrecioPreviewVm
+                {
+                    Codigo = p.Codigo,
+                    Nombre = p.Nombre,
+                    PrecioActual = p.PrecioUnitario,
+                    PrecioNuevo = CalcularNuevoPrecio(p.PrecioUnitario, factor)
+                })
+                .ToList();
+
+            return View(vm);
+        }
+
+        private static decimal CalcularNuevoPrecio(decimal actual, decimal factor)
+        {
+            var nuevo = Math.Round(actual * factor, 2, MidpointRounding.AwayFromZero);
+
+            // Respeta los límites del modelo (mínimo 0,01 y máximo de la columna)
+            return Math.Clamp(nuevo, 0.01m, 999999999.99m);
         }
 
         private void CargarUnidades(string? seleccionada = null)

@@ -1,0 +1,179 @@
+﻿@model GestorCuentasCorrientes.web.Models.ViewModels.ActualizarPreciosVm
+
+@{
+    ViewData["Title"] = "Actualizar precios";
+}
+
+<div class="container-fluid px-0">
+
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center mb-4">
+
+        <div class="page-header-icon me-3">
+            <i class="bi bi-percent"></i>
+        </div>
+
+        <div>
+            <h1 class="h2 fw-bold mb-1 page-title">
+                Actualizar precios
+            </h1>
+
+            <p class="text-muted mb-0">
+                Aumentá o bajá los precios de los productos en un porcentaje. Primero vas a ver una vista previa.
+            </p>
+        </div>
+
+    </div>
+
+    <form asp-action="ActualizarPrecios" method="post">
+
+        <div class="row">
+
+            <div class="col-12 col-lg-6">
+
+                <div class="card border-0 shadow-sm form-card">
+
+                    <div class="card-body p-4">
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <!-- Porcentaje -->
+                        <div class="mb-3">
+
+                            <label asp-for="Porcentaje"
+                                   class="form-label">
+                            </label>
+
+                            <div class="input-group">
+
+                                <input asp-for="Porcentaje"
+                                       type="number"
+                                       step="1"
+                                       min="-90"
+                                       max="500"
+                                       class="form-control" />
+
+                                <span class="input-group-text">%</span>
+
+                            </div>
+
+                            <div class="form-text">
+                                Número positivo para aumentar (10 sube un 10 %) y negativo para bajar (-5 baja un 5 %).
+                            </div>
+
+                            <span asp-validation-for="Porcentaje"
+                                  class="text-danger small">
+                            </span>
+
+                        </div>
+
+                        <!-- Solo activos -->
+                        <div class="form-check mb-4">
+
+                            <input asp-for="SoloActivos"
+                                   class="form-check-input" />
+
+                            <label asp-for="SoloActivos"
+                                   class="form-check-label">
+                            </label>
+
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex flex-column flex-sm-row gap-2 form-actions">
+
+                            <button type="submit"
+                                    name="accion"
+                                    value="vista"
+                                    class="btn btn-primary px-4">
+                                <i class="bi bi-eye me-1"></i>
+                                Ver vista previa
+                            </button>
+
+                            <a asp-action="Index"
+                               class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Volver
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        @if (Model.Vista.Any())
+        {
+            <div class="card border-0 shadow-sm surface-card mt-4">
+
+                <div class="card-header bg-white px-4 py-3">
+                    <h2 class="h6 fw-bold mb-0">
+                        <i class="bi bi-list-check me-1"></i>
+                        Vista previa: @Model.Vista.Count producto(s)
+                    </h2>
+                </div>
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-products mb-0">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Código</th>
+                                    <th scope="col" class="px-4 py-3">Producto</th>
+                                    <th scope="col" class="px-4 py-3 text-end">Precio actual</th>
+                                    <th scope="col" class="px-4 py-3 text-end">Precio nuevo</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.Vista)
+                                {
+                                    <tr>
+                                        <td class="px-4 py-3 text-muted">@(item.Codigo ?? "—")</td>
+                                        <td class="px-4 py-3">@item.Nombre</td>
+                                        <td class="px-4 py-3 text-end">@item.PrecioActual.ToString("C")</td>
+                                        <td class="px-4 py-3 text-end fw-bold">@item.PrecioNuevo.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+                <div class="card-footer bg-white px-4 py-3">
+
+                    <button type="submit"
+                            name="accion"
+                            value="aplicar"
+                            class="btn btn-success px-4"
+                            onclick="return confirm('¿Aplicar ' + document.getElementById('Porcentaje').value + '% a @Model.Vista.Count producto(s)? Los presupuestos ya emitidos no cambian.');">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Aplicar cambios
+                    </button>
+
+                </div>
+
+            </div>
+        }
+
+    </form>
+
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
