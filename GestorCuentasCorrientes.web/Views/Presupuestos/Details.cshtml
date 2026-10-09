@@ -3,9 +3,12 @@
 @{
     ViewData["Title"] = "Detalle del Presupuesto";
 
-    var estadoClase = Model.Estado == "Aprobado" ? "status-pill--active"
-                : Model.Estado == "Rechazado" ? "status-pill--inactive"
-                : "status-pill--neutral";
+   var estadoClase = Model.Estado == "Aprobado" ? "status-pill--active"
+            : (Model.Estado == "Rechazado" || Model.Estado == "Anulado") ? "status-pill--inactive"
+            : "status-pill--neutral";
+    var vencido = Model.Estado == "Pendiente"
+    && Model.FechaVencimiento.HasValue
+    && Model.FechaVencimiento.Value.Date < DateTime.Today;
 }
 
 <div class="container-fluid px-0">
@@ -35,91 +38,109 @@
 
         <div class="d-flex flex-column flex-sm-row gap-2 mt-3 mt-md-0">
 
-            @if (Model.Estado == "Pendiente")
-            {
-                <form asp-controller="Presupuestos"
-                      asp-action="Aceptar"
-                      asp-route-id="@Model.Id"
-                      method="post"
-                      class="d-inline">
+    @if (Model.Estado == "Pendiente")
+    {
+        <a asp-controller="Presupuestos"
+           asp-action="Edit"
+           asp-route-id="@Model.Id"
+           class="btn btn-outline-primary px-4">
+            <i class="bi bi-pencil me-1"></i>
+            Editar
+        </a>
 
-                    <button type="submit"
-                            class="btn btn-success px-4 shadow-sm">
-                        <i class="bi bi-check-circle me-1"></i>
-                        Aceptar presupuesto
-                    </button>
+        @if (vencido)
+        {
+            <span class="text-danger small align-self-center">
+                Vencido: editá la validez para poder aceptarlo.
+            </span>
+        }
+        else
+        {
+            <form asp-controller="Presupuestos"
+                  asp-action="Aceptar"
+                  asp-route-id="@Model.Id"
+                  method="post"
+                  class="d-inline">
 
-                </form>
+                <button type="submit"
+                        class="btn btn-success px-4 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Aceptar presupuesto
+                </button>
 
-                <form asp-controller="Presupuestos"
-                      asp-action="Rechazar"
-                      asp-route-id="@Model.Id"
-                      method="post"
-                      class="d-inline">
+            </form>
+        }
 
-                    <button type="submit"
-                            class="btn btn-outline-danger px-4"
-                            onclick="return confirm('¿Está seguro de que desea rechazar este presupuesto?');">
-                        <i class="bi bi-x-circle me-1"></i>
-                        Rechazar
-                    </button>
+        <form asp-controller="Presupuestos"
+              asp-action="Rechazar"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="d-inline">
 
-                </form>
-            }
+            <button type="submit"
+                    class="btn btn-outline-danger px-4"
+                    onclick="return confirm('¿Está seguro de que desea rechazar este presupuesto?');">
+                <i class="bi bi-x-circle me-1"></i>
+                Rechazar
+            </button>
 
-            @if (Model.Estado == "Aprobado" && Model.Movimiento == null)
-{
-    <a asp-controller="Movimientos"
-       asp-action="Create"
-       asp-route-clienteId="@Model.ClienteId"
-       asp-route-presupuestoId="@Model.Id"
-       class="btn btn-primary px-4 shadow-sm">
-        <i class="bi bi-receipt me-1"></i>
-        Generar movimiento
+        </form>
+    }
+
+    @if (Model.Estado == "Aprobado" && Model.Movimiento == null)
+    {
+        <a asp-controller="Movimientos"
+           asp-action="Create"
+           asp-route-clienteId="@Model.ClienteId"
+           asp-route-presupuestoId="@Model.Id"
+           class="btn btn-primary px-4 shadow-sm">
+            <i class="bi bi-receipt me-1"></i>
+            Generar movimiento
+        </a>
+    }
+    else if (Model.Movimiento != null)
+    {
+        <span class="btn btn-outline-success px-4 disabled">
+            <i class="bi bi-check2-circle me-1"></i>
+            Movimiento generado
+        </span>
+    }
+
+    @if ((Model.Estado == "Pendiente" || Model.Estado == "Aprobado") && Model.Movimiento == null)
+    {
+        <form asp-controller="Presupuestos"
+              asp-action="Anular"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="d-inline">
+
+            <button type="submit"
+                    class="btn btn-outline-secondary px-4"
+                    onclick="return confirm('¿Está seguro de que desea anular este presupuesto?');">
+                <i class="bi bi-slash-circle me-1"></i>
+                Anular
+            </button>
+
+        </form>
+    }
+
+    <a asp-controller="Presupuestos"
+       asp-action="Pdf"
+       asp-route-id="@Model.Id"
+       class="btn btn-danger px-4 shadow-sm">
+        <i class="bi bi-file-earmark-pdf me-1"></i>
+        Descargar PDF
     </a>
-}
-else if (Model.Movimiento != null)
-{
-    <span class="btn btn-outline-success px-4 disabled">
-        <i class="bi bi-check2-circle me-1"></i>
-        Movimiento generado
-    </span>
-}
 
-            @if ((Model.Estado == "Pendiente" || Model.Estado == "Aprobado") && Model.Movimiento == null)
-            {
-                <form asp-controller="Presupuestos"
-                      asp-action="Anular"
-                      asp-route-id="@Model.Id"
-                      method="post"
-                      class="d-inline">
+    <a asp-controller="Clientes"
+       asp-action="Details"
+       asp-route-id="@Model.ClienteId"
+       class="btn btn-outline-secondary px-4">
+        <i class="bi bi-arrow-left me-1"></i>
+        Volver al cliente
+    </a>
 
-                    <button type="submit"
-                            class="btn btn-outline-secondary px-4"
-                            onclick="return confirm('¿Está seguro de que desea anular este presupuesto?');">
-                        <i class="bi bi-slash-circle me-1"></i>
-                        Anular
-                    </button>
-                </form>
-            }
-
-            <a asp-controller="Presupuestos"
-               asp-action="Pdf"
-               asp-route-id="@Model.Id"
-               class="btn btn-danger px-4 shadow-sm">
-                <i class="bi bi-file-earmark-pdf me-1"></i>
-                Descargar PDF
-            </a>
-
-            <a asp-controller="Clientes"
-               asp-action="Details"
-               asp-route-id="@Model.ClienteId"
-               class="btn btn-outline-secondary px-4">
-                <i class="bi bi-arrow-left me-1"></i>
-                Volver al cliente
-            </a>
-
-        </div>
+</div>
 
     </div>
 
@@ -168,6 +189,20 @@ else if (Model.Movimiento != null)
                     </p>
 
                 </div>
+                <div class="col-md-4">
+
+    <div class="info-label">Válido hasta</div>
+
+    <p class="info-value">
+        @(Model.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")
+
+        @if (vencido)
+        {
+            <span class="status-pill status-pill--inactive ms-2">Vencido</span>
+        }
+    </p>
+
+</div>
 
                 <div class="col-md-6">
 

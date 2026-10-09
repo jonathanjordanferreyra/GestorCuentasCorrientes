@@ -28,16 +28,78 @@ namespace GestorCuentasCorrientes.web.Controllers
         }
 
         // GET: Presupuestos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? estado, int? clienteId, DateTime? desde, DateTime? hasta, int page = 1)
         {
-            var presupuestos = await _context.Presupuestos
-                .Include(p => p.Cliente)
-                .Include(p => p.Detalles)
-                .AsNoTracking()
+            const int tamanoPagina = 10;
+            var hoy = DateTime.Today;
+
+            IQueryable<Presupuesto> query = _context.Presupuestos.AsNoTracking();
+
+            // "Vencido" no es un estado guardado: es un Pendiente cuya validez ya pasó
+            if (!string.IsNullOrWhiteSpace(estado))
+            {
+                if (estado == "Vencido")
+                {
+                    query = query.Where(p =>
+                        p.Estado == "Pendiente" &&
+                        p.FechaVencimiento != null &&
+                        p.FechaVencimiento < hoy);
+                }
+                else
+                {
+                    query = query.Where(p => p.Estado == estado);
+                }
+            }
+
+            if (clienteId.HasValue)
+                query = query.Where(p => p.ClienteId == clienteId.Value);
+
+            if (desde.HasValue)
+                query = query.Where(p => p.Fecha >= desde.Value.Date);
+
+            if (hasta.HasValue)
+                query = query.Where(p => p.Fecha < hasta.Value.Date.AddDays(1));
+
+            // Paginación
+            var totalItems = await query.CountAsync();
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalItems / (double)tamanoPagina));
+            page = Math.Clamp(page, 1, totalPaginas);
+
+            var items = await query
                 .OrderByDescending(p => p.Id)
+                .Skip((page - 1) * tamanoPagina)
+                .Take(tamanoPagina)
+                .Select(p => new PresupuestoListaItemVm
+                {
+                    Id = p.Id,
+                    Fecha = p.Fecha,
+                    FechaVencimiento = p.FechaVencimiento,
+                    Cliente = p.Cliente != null ? p.Cliente.RazonSocial : "",
+                    Estado = p.Estado,
+                    Total = p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario)
+                })
                 .ToListAsync();
 
-            return View(presupuestos);
+            // Suma de TODO lo filtrado (no solo de la página actual)
+            var totalListado = await _context.PresupuestoDetalles
+                .Where(d => query.Select(p => p.Id).Contains(d.PresupuestoId))
+                .SumAsync(d => d.Cantidad * d.PrecioUnitario);
+
+            ViewBag.Clientes = new SelectList(
+                await _context.Clientes.OrderBy(c => c.RazonSocial).ToListAsync(),
+                "Id", "RazonSocial", clienteId);
+
+            ViewBag.Estado = estado;
+            ViewBag.ClienteIdFiltro = clienteId;
+            ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPaginas;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.TotalListado = totalListado;
+
+            return View(items);
         }
 
         // GET: Presupuestos/Create
@@ -76,6 +138,45 @@ namespace GestorCuentasCorrientes.web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PresupuestoCreateVm viewModel)
         {
+            var productos = await ValidarPresupuestoAsync(viewModel);
+
+            if (!ModelState.IsValid)
+            {
+                await RecargarFormularioAsync(viewModel);
+                return View(viewModel);
+            }
+
+            var usuarioId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                ModelState.AddModelError("", "No se pudo identificar al usuario.");
+                await RecargarFormularioAsync(viewModel);
+                return View(viewModel);
+            }
+
+            var presupuesto = new Presupuesto
+            {
+                Fecha = viewModel.Fecha,
+                FechaVencimiento = viewModel.Fecha.Date.AddDays(viewModel.DiasValidez),
+                Observaciones = viewModel.Observaciones,
+                Estado = "Pendiente",
+                FechaRegistro = DateTime.Now,
+                ClienteId = viewModel.ClienteId,
+                UsuarioId = usuarioId
+            };
+
+            AgregarDetalles(presupuesto, viewModel, productos);
+
+            _context.Presupuestos.Add(presupuesto);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
+        }
+
+        // Validaciones comunes a Crear y Editar. Devuelve los productos de las líneas.
+        private async Task<Dictionary<int, Producto>> ValidarPresupuestoAsync(PresupuestoCreateVm viewModel)
+        {
             // Eliminar líneas sin producto o con cantidad inválida
             viewModel.Detalles = viewModel.Detalles?
                 .Where(d => d.ProductoId > 0 && d.Cantidad > 0)
@@ -89,11 +190,8 @@ namespace GestorCuentasCorrientes.web.Controllers
                     "Debe agregar al menos un producto al presupuesto.");
             }
 
-            // Validar cliente
             var cliente = await _context.Clientes
-                .FirstOrDefaultAsync(c =>
-                    c.Id == viewModel.ClienteId &&
-                    c.Activo);
+                .FirstOrDefaultAsync(c => c.Id == viewModel.ClienteId && c.Activo);
 
             if (cliente == null)
             {
@@ -102,89 +200,52 @@ namespace GestorCuentasCorrientes.web.Controllers
                     "El cliente no existe o está inactivo.");
             }
 
-            // Buscar todos los productos seleccionados
             var productoIds = viewModel.Detalles
                 .Select(d => d.ProductoId)
                 .Distinct()
                 .ToList();
 
             var productos = await _context.Productos
-                .Where(p =>
-                    productoIds.Contains(p.Id) &&
-                    p.Activo)
+                .Where(p => productoIds.Contains(p.Id) && p.Activo)
                 .ToDictionaryAsync(p => p.Id);
 
-            // Validar que todos los productos existan y estén activos
-            foreach (var detalleVm in viewModel.Detalles)
-            {
-                if (!productos.ContainsKey(detalleVm.ProductoId))
-                {
-                    ModelState.AddModelError(
-                        "Detalles",
-                        "Uno de los productos seleccionados no existe o está inactivo.");
-                }
-
-            }
-
-            if (!ModelState.IsValid)
-            {
-                await CargarClientes(viewModel.ClienteId);
-                await CargarProductos();
-
-                if (!viewModel.Detalles.Any())
-                {
-                    viewModel.Detalles.Add(new PresupuestoDetalleVm());
-                }
-
-                return View(viewModel);
-            }
-
-            var usuarioId = _userManager.GetUserId(User);
-
-            if (string.IsNullOrEmpty(usuarioId))
+            if (viewModel.Detalles.Any(d => !productos.ContainsKey(d.ProductoId)))
             {
                 ModelState.AddModelError(
-                    "",
-                    "No se pudo identificar al usuario.");
-
-                await CargarClientes(viewModel.ClienteId);
-                await CargarProductos();
-
-                return View(viewModel);
+                    "Detalles",
+                    "Uno de los productos seleccionados no existe o está inactivo.");
             }
 
-            var presupuesto = new Presupuesto
-            {
-                Fecha = viewModel.Fecha,
-                Observaciones = viewModel.Observaciones,
-                Estado = "Pendiente",
-                FechaRegistro = DateTime.Now,
-                ClienteId = viewModel.ClienteId,
-                UsuarioId = usuarioId
-            };
+            return productos;
+        }
 
+        // Copia nombre y precio del producto: el presupuesto conserva el precio del momento
+        private static void AgregarDetalles(
+            Presupuesto presupuesto,
+            PresupuestoCreateVm viewModel,
+            Dictionary<int, Producto> productos)
+        {
             foreach (var detalleVm in viewModel.Detalles)
             {
                 var producto = productos[detalleVm.ProductoId];
 
-                var detalle = new PresupuestoDetalle
+                presupuesto.Detalles.Add(new PresupuestoDetalle
                 {
                     ProductoId = producto.Id,
                     Descripcion = producto.Nombre,
                     Cantidad = detalleVm.Cantidad,
                     PrecioUnitario = producto.PrecioUnitario
-                };
-
-                presupuesto.Detalles.Add(detalle);
+                });
             }
+        }
 
-            _context.Presupuestos.Add(presupuesto);
+        private async Task RecargarFormularioAsync(PresupuestoCreateVm viewModel)
+        {
+            await CargarClientes(viewModel.ClienteId);
+            await CargarProductos();
 
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(
-                nameof(Details),
-                new { id = presupuesto.Id });
+            if (!viewModel.Detalles.Any())
+                viewModel.Detalles.Add(new PresupuestoDetalleVm());
         }
 
         // GET: Presupuestos/Details/5
@@ -205,6 +266,94 @@ namespace GestorCuentasCorrientes.web.Controllers
                 return NotFound();
 
             return View(presupuesto);
+        }
+
+        // GET: Presupuestos/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var presupuesto = await _context.Presupuestos
+                .Include(p => p.Detalles)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (presupuesto == null)
+                return NotFound();
+
+            // Solo se puede editar mientras esté Pendiente
+            if (presupuesto.Estado != "Pendiente")
+                return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
+
+            // Para detalles viejos (sin ProductoId) intentamos reconocer el producto por nombre
+            var productos = await _context.Productos.AsNoTracking().ToListAsync();
+
+            var viewModel = new PresupuestoCreateVm
+            {
+                Id = presupuesto.Id,
+                ClienteId = presupuesto.ClienteId,
+                Fecha = presupuesto.Fecha,
+                Observaciones = presupuesto.Observaciones,
+                DiasValidez = presupuesto.FechaVencimiento.HasValue
+                    ? Math.Max(1, (presupuesto.FechaVencimiento.Value.Date - presupuesto.Fecha.Date).Days)
+                    : 15,
+                Detalles = presupuesto.Detalles
+                    .OrderBy(d => d.Id)
+                    .Select(d => new PresupuestoDetalleVm
+                    {
+                        ProductoId = d.ProductoId
+                            ?? productos.FirstOrDefault(p => p.Nombre == d.Descripcion)?.Id
+                            ?? 0,
+                        Cantidad = d.Cantidad
+                    })
+                    .ToList()
+            };
+
+            await RecargarFormularioAsync(viewModel);
+
+            // Reutiliza la vista Create, igual que hiciste con Movimientos
+            return View("Create", viewModel);
+        }
+
+        // POST: Presupuestos/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, PresupuestoCreateVm viewModel)
+        {
+            if (viewModel.Id != id)
+                return NotFound();
+
+            var presupuesto = await _context.Presupuestos
+                .Include(p => p.Detalles)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (presupuesto == null)
+                return NotFound();
+
+            if (presupuesto.Estado != "Pendiente")
+                return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
+
+            var productos = await ValidarPresupuestoAsync(viewModel);
+
+            if (!ModelState.IsValid)
+            {
+                await RecargarFormularioAsync(viewModel);
+                return View("Create", viewModel);
+            }
+
+            presupuesto.Fecha = viewModel.Fecha;
+            presupuesto.FechaVencimiento = viewModel.Fecha.Date.AddDays(viewModel.DiasValidez);
+            presupuesto.Observaciones = viewModel.Observaciones;
+            presupuesto.ClienteId = viewModel.ClienteId;
+
+            // Se reemplazan las líneas por las del formulario
+            _context.PresupuestoDetalles.RemoveRange(presupuesto.Detalles);
+            AgregarDetalles(presupuesto, viewModel, productos);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
         }
 
         // GET: Presupuestos/Pdf/5
@@ -590,18 +739,21 @@ namespace GestorCuentasCorrientes.web.Controllers
 
             if (presupuesto.Estado != "Pendiente")
             {
-                return RedirectToAction(
-                    nameof(Details),
-                    new { id = presupuesto.Id });
+                return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
+            }
+
+            // Un presupuesto vencido no se puede aceptar (hay que editar su validez primero)
+            if (presupuesto.FechaVencimiento.HasValue &&
+                presupuesto.FechaVencimiento.Value.Date < DateTime.Today)
+            {
+                return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
             }
 
             presupuesto.Estado = "Aprobado";
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(
-                nameof(Details),
-                new { id = presupuesto.Id });
+            return RedirectToAction(nameof(Details), new { id = presupuesto.Id });
         }
 
         [HttpPost]

@@ -9,6 +9,9 @@ namespace GestorCuentasCorrientes.web.Models
         [Display(Name = "Fecha")]
         [DataType(DataType.Date)]
         public DateTime Fecha { get; set; } = DateTime.Now;
+        [Display(Name = "Válido hasta")]
+        [DataType(DataType.Date)]
+        public DateTime? FechaVencimiento { get; set; }
 
         [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder 500 caracteres")]
         [Display(Name = "Observaciones")]

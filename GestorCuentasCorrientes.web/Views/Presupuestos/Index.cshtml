@@ -1,7 +1,17 @@
-﻿@model IEnumerable<GestorCuentasCorrientes.web.Models.Presupuesto>
+﻿@using GestorCuentasCorrientes.web.Models.ViewModels
+@model List<PresupuestoListaItemVm>
 
 @{
     ViewData["Title"] = "Presupuestos";
+
+    int pagina = ViewBag.Page;
+    int totalPaginas = ViewBag.TotalPages;
+    int totalItems = ViewBag.TotalItems;
+    decimal totalListado = ViewBag.TotalListado;
+    string? estado = ViewBag.Estado;
+    int? clienteId = ViewBag.ClienteIdFiltro;
+    string? desde = ViewBag.Desde;
+    string? hasta = ViewBag.Hasta;
 }
 
 <div class="container-fluid px-0">
@@ -40,19 +50,96 @@
 
     </div>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>
-            No hay presupuestos registrados.
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4 surface-card filter-card">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex align-items-center mb-3">
+
+                <div class="filter-icon me-2">
+                    <i class="bi bi-funnel fs-5"></i>
+                </div>
+
+                <div>
+                    <h2 class="h6 fw-bold mb-0">
+                        Filtrar presupuestos
+                    </h2>
+
+                    <small class="text-muted">
+                        Combiná los filtros que necesites.
+                    </small>
+                </div>
+
+            </div>
+
+            <form method="get" class="row g-3">
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label small text-muted mb-1">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        @foreach (var (valor, texto) in new[]
+                        {
+                            ("Pendiente", "Pendiente"),
+                            ("Aprobado", "Aceptado"),
+                            ("Rechazado", "Rechazado"),
+                            ("Anulado", "Anulado"),
+                            ("Vencido", "Vencido")
+                        })
+                        {
+                            <option value="@valor" selected="@(estado == valor)">@texto</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label small text-muted mb-1">Cliente</label>
+                    <select name="clienteId" asp-items="ViewBag.Clientes" class="form-select">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Desde</label>
+                    <input type="date" name="desde" class="form-control" value="@desde" />
+                </div>
+
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1">Hasta</label>
+                    <input type="date" name="hasta" class="form-control" value="@hasta" />
+                </div>
+
+                <div class="col-12 col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>
+                        Filtrar
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary" title="Limpiar filtros">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </div>
+
+            </form>
+
         </div>
-    }
-    else
-    {
-        <div class="card border-0 shadow-sm surface-card">
 
-            <div class="card-body p-0">
+    </div>
 
+    <!-- Tabla -->
+    <div class="card border-0 shadow-sm surface-card">
+
+        <div class="card-body p-0">
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info m-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No se encontraron presupuestos.
+                </div>
+            }
+            else
+            {
                 <div class="table-responsive">
 
                     <table class="table table-products align-middle mb-0">
@@ -71,6 +158,10 @@
 
                                 <th class="px-4 py-3">
                                     Cliente
+                                </th>
+
+                                <th class="px-4 py-3">
+                                    Válido hasta
                                 </th>
 
                                 <th class="px-4 py-3">
@@ -93,10 +184,9 @@
 
                             @foreach (var presupuesto in Model)
                             {
-                                var total = presupuesto.Detalles
-                                    .Sum(d =>
-                                        d.Cantidad *
-                                        d.PrecioUnitario);
+                                var vencido = presupuesto.Estado == "Pendiente"
+                                    && presupuesto.FechaVencimiento.HasValue
+                                    && presupuesto.FechaVencimiento.Value.Date < DateTime.Today;
 
                                 <tr>
 
@@ -113,8 +203,12 @@
                                     <td class="px-4 py-3">
                                         <div class="client-cell">
                                             <i class="bi bi-person-circle"></i>
-                                            <span>@presupuesto.Cliente?.RazonSocial</span>
+                                            <span>@presupuesto.Cliente</span>
                                         </div>
+                                    </td>
+
+                                    <td class="px-4 py-3 text-nowrap">
+                                        @(presupuesto.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "—")
                                     </td>
 
                                     <td class="px-4 py-3">
@@ -125,10 +219,10 @@
                                                 Aceptado
                                             </span>
                                         }
-                                        else if (presupuesto.Estado == "Rechazado")
+                                        else if (presupuesto.Estado == "Rechazado" || presupuesto.Estado == "Anulado")
                                         {
                                             <span class="status-pill status-pill--inactive">
-                                                Rechazado
+                                                @presupuesto.Estado
                                             </span>
                                         }
                                         else
@@ -138,17 +232,24 @@
                                             </span>
                                         }
 
+                                        @if (vencido)
+                                        {
+                                            <span class="status-pill status-pill--inactive ms-1">
+                                                Vencido
+                                            </span>
+                                        }
+
                                     </td>
 
                                     <td class="px-4 py-3 text-end">
 
                                         <span class="product-price">
-                                            @total.ToString("C2")
+                                            @presupuesto.Total.ToString("C2")
                                         </span>
 
                                     </td>
 
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-4 py-3 text-center text-nowrap">
 
                                         <a asp-controller="Presupuestos"
                                            asp-action="Details"
@@ -157,6 +258,29 @@
 
                                             <i class="bi bi-eye me-1"></i>
                                             Ver
+
+                                        </a>
+
+                                        @if (presupuesto.Estado == "Pendiente")
+                                        {
+                                            <a asp-controller="Presupuestos"
+                                               asp-action="Edit"
+                                               asp-route-id="@presupuesto.Id"
+                                               class="btn btn-sm btn-outline-secondary px-3"
+                                               title="Editar">
+
+                                                <i class="bi bi-pencil"></i>
+
+                                            </a>
+                                        }
+
+                                        <a asp-controller="Presupuestos"
+                                           asp-action="Pdf"
+                                           asp-route-id="@presupuesto.Id"
+                                           class="btn btn-sm btn-outline-danger px-3"
+                                           title="Descargar PDF">
+
+                                            <i class="bi bi-file-earmark-pdf"></i>
 
                                         </a>
 
@@ -170,10 +294,71 @@
                     </table>
 
                 </div>
-
-            </div>
+            }
 
         </div>
-    }
+
+        <div class="card-footer bg-white d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 px-4 py-3">
+
+            <div>
+                <small class="text-muted d-block">
+                    @totalItems presupuesto(s) · Página @pagina de @totalPaginas
+                </small>
+                <span class="fw-bold">
+                    Total del listado: @totalListado.ToString("C2")
+                </span>
+            </div>
+
+            @if (totalPaginas > 1)
+            {
+                <nav aria-label="Paginación de presupuestos">
+                    <ul class="pagination pagination-sm mb-0">
+
+                        <li class="page-item @(pagina == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(pagina - 1)"
+                               asp-route-estado="@estado"
+                               asp-route-clienteId="@clienteId"
+                               asp-route-desde="@desde"
+                               asp-route-hasta="@hasta">
+                                Anterior
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= totalPaginas; i++)
+                        {
+                            <li class="page-item @(i == pagina ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-estado="@estado"
+                                   asp-route-clienteId="@clienteId"
+                                   asp-route-desde="@desde"
+                                   asp-route-hasta="@hasta">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(pagina == totalPaginas ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(pagina + 1)"
+                               asp-route-estado="@estado"
+                               asp-route-clienteId="@clienteId"
+                               asp-route-desde="@desde"
+                               asp-route-hasta="@hasta">
+                                Siguiente
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            }
+
+        </div>
+
+    </div>
 
 </div>

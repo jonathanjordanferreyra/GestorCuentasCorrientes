@@ -17,6 +17,12 @@ namespace GestorCuentasCorrientes.web.Models.ViewModels
         public string? Observaciones { get; set; }
 
         public List<PresupuestoDetalleVm> Detalles { get; set; } = new();
+        // Solo se usa al editar: null = presupuesto nuevo
+        public int? Id { get; set; }
+
+        [Range(1, 365, ErrorMessage = "La validez debe estar entre 1 y 365 días")]
+        [Display(Name = "Validez (días)")]
+        public int DiasValidez { get; set; } = 15;
     }
 
     public class PresupuestoDetalleVm
