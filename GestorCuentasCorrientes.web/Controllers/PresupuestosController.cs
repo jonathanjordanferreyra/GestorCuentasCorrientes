@@ -498,6 +498,28 @@ namespace GestorCuentasCorrientes.web.Controllers
                                                 .FontSize(12)
                                                 .Bold();
                                         });
+
+                                    row.RelativeItem()
+                                        .Background(colorFondoSuave)
+                                        .Border(1)
+                                        .BorderColor(colorBorde)
+                                        .Padding(10)
+                                        .Column(col =>
+                                        {
+                                            col.Item()
+                                                .Text("VÁLIDO HASTA")
+                                                .FontSize(8)
+                                                .Bold()
+                                                .FontColor(colorTextoSuave);
+
+                                            col.Item()
+                                                .PaddingTop(3)
+                                                .Text(
+                                                    presupuesto.FechaVencimiento?.ToString("dd/MM/yyyy")
+                                                    ?? "—")
+                                                .FontSize(12)
+                                                .Bold();
+                                        });
                                 });
 
                             // Observaciones

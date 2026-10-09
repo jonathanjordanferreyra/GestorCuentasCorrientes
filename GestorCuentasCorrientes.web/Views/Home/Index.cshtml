@@ -1,19 +1,224 @@
-﻿@{
+﻿@model GestorCuentasCorrientes.web.Models.ViewModels.DashboardVm
+
+@{
     ViewData["Title"] = "Inicio";
 }
 
 <div class="home-page">
 
-   <!-- Encabezado -->
-<div class="home-hero mb-5 text-center">
-    <h1 class="display-6 fw-bold home-hero-title">
-        Gestor de Cuentas
-    </h1>
+    <!-- Encabezado -->
+    <div class="home-hero mb-5 text-center">
+        <h1 class="display-6 fw-bold home-hero-title">
+            Gestor de Cuentas
+        </h1>
 
-    <p class="fs-5 mb-0 home-hero-subtitle">
-        Administración de cuentas corrientes y gestión comercial.
-    </p>
-</div>
+        <p class="fs-5 mb-0 home-hero-subtitle">
+            Administración de cuentas corrientes y gestión comercial.
+        </p>
+    </div>
+
+    @if (Model.MostrarResumen)
+    {
+        <!-- Resumen de presupuestos -->
+        <h2 class="h5 fw-bold mb-3">
+            Resumen de presupuestos
+        </h2>
+
+        <div class="row g-4 mb-4">
+
+            <!-- Pendientes -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <a asp-controller="Presupuestos" asp-action="Index" asp-route-estado="Pendiente"
+                   class="text-decoration-none text-body d-block h-100">
+                    <div class="card h-100 border-0 shadow-sm surface-card">
+                        <div class="card-body p-4">
+                            <div class="text-uppercase small text-muted fw-semibold mb-2">
+                                Pendientes vigentes
+                            </div>
+                            <div class="display-6 fw-bold text-primary">@Model.PendientesCantidad</div>
+                            <div class="fw-semibold">@Model.PendientesMonto.ToString("C0")</div>
+                            <div class="small text-muted mt-1">
+                                @Model.PorVencerCantidad @(Model.PorVencerCantidad == 1 ? "vence" : "vencen") en los próximos 7 días
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Vencidos -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <a asp-controller="Presupuestos" asp-action="Index" asp-route-estado="Vencido"
+                   class="text-decoration-none text-body d-block h-100">
+                    <div class="card h-100 border-0 shadow-sm surface-card">
+                        <div class="card-body p-4">
+                            <div class="text-uppercase small text-muted fw-semibold mb-2">
+                                Vencidos sin respuesta
+                            </div>
+                            <div class="display-6 fw-bold text-danger">@Model.VencidosCantidad</div>
+                            <div class="fw-semibold">@Model.VencidosMonto.ToString("C0")</div>
+                            <div class="small text-muted mt-1">
+                                Hay que renovarlos o anularlos
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Aceptados del mes -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <a asp-controller="Presupuestos" asp-action="Index" asp-route-estado="Aprobado"
+                   class="text-decoration-none text-body d-block h-100">
+                    <div class="card h-100 border-0 shadow-sm surface-card">
+                        <div class="card-body p-4">
+                            <div class="text-uppercase small text-muted fw-semibold mb-2">
+                                Aceptados este mes
+                            </div>
+                            <div class="display-6 fw-bold text-success">@Model.AceptadosMesCantidad</div>
+                            <div class="fw-semibold">@Model.AceptadosMesMonto.ToString("C0")</div>
+                            <div class="small text-muted mt-1">
+                                Según la fecha del presupuesto
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Sin movimiento -->
+            <div class="col-12 col-md-6 col-xl-3">
+                <a asp-controller="Presupuestos" asp-action="Index" asp-route-estado="Aprobado"
+                   class="text-decoration-none text-body d-block h-100">
+                    <div class="card h-100 border-0 shadow-sm surface-card">
+                        <div class="card-body p-4">
+                            <div class="text-uppercase small text-muted fw-semibold mb-2">
+                                Aceptados sin movimiento
+                            </div>
+                            <div class="display-6 fw-bold text-warning">@Model.SinMovimientoCantidad</div>
+                            <div class="fw-semibold">@Model.SinMovimientoMonto.ToString("C0")</div>
+                            <div class="small text-muted mt-1">
+                                Listos para cargar en cuenta corriente
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Últimos presupuestos -->
+        <div class="card border-0 shadow-sm surface-card mb-5">
+
+            <div class="card-header bg-white d-flex justify-content-between align-items-center px-4 py-3">
+                <h3 class="h6 fw-bold mb-0">
+                    Últimos presupuestos
+                </h3>
+
+                <a asp-controller="Presupuestos"
+                   asp-action="Index"
+                   class="btn btn-sm btn-outline-primary">
+                    Ver todos
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+
+                @if (!Model.Ultimos.Any())
+                {
+                    <div class="alert alert-info m-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Todavía no hay presupuestos registrados.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+
+                        <table class="table table-products align-middle mb-0">
+
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3">N.º</th>
+                                    <th class="px-4 py-3">Cliente</th>
+                                    <th class="px-4 py-3">Fecha</th>
+                                    <th class="px-4 py-3">Estado</th>
+                                    <th class="px-4 py-3 text-end">Total</th>
+                                    <th class="px-4 py-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var p in Model.Ultimos)
+                                {
+                                    var vencido = p.Estado == "Pendiente"
+                                        && p.FechaVencimiento.HasValue
+                                        && p.FechaVencimiento.Value.Date < DateTime.Today;
+
+                                    <tr>
+
+                                        <td class="px-4 py-3">
+                                            <span class="doc-number">@p.Id</span>
+                                        </td>
+
+                                        <td class="px-4 py-3">@p.Cliente</td>
+
+                                        <td class="px-4 py-3 text-nowrap">
+                                            @p.Fecha.ToString("dd/MM/yyyy")
+                                        </td>
+
+                                        <td class="px-4 py-3">
+
+                                            @if (p.Estado == "Aprobado")
+                                            {
+                                                <span class="status-pill status-pill--active">Aceptado</span>
+                                            }
+                                            else if (p.Estado == "Rechazado" || p.Estado == "Anulado")
+                                            {
+                                                <span class="status-pill status-pill--inactive">@p.Estado</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status-pill status-pill--neutral">@p.Estado</span>
+                                            }
+
+                                            @if (vencido)
+                                            {
+                                                <span class="status-pill status-pill--inactive ms-1">Vencido</span>
+                                            }
+
+                                        </td>
+
+                                        <td class="px-4 py-3 text-end">
+                                            <span class="product-price">@p.Total.ToString("C2")</span>
+                                        </td>
+
+                                        <td class="px-4 py-3 text-center">
+                                            <a asp-controller="Presupuestos"
+                                               asp-action="Details"
+                                               asp-route-id="@p.Id"
+                                               class="btn btn-sm btn-outline-primary px-3">
+                                                <i class="bi bi-eye me-1"></i>
+                                                Ver
+                                            </a>
+                                        </td>
+
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                }
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border text-center mb-5">
+            Iniciá sesión para ver el resumen de actividad.
+        </div>
+    }
 
     <!-- Módulos principales -->
     <div class="row g-4">

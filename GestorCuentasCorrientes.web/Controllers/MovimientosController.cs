@@ -95,7 +95,6 @@ namespace GestorCuentasCorrientes.web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MovimientoRecibosCreateVm viewModel)
         {
-            System.Diagnostics.Debug.WriteLine($"🔵 POST Create iniciado. ModelState.IsValid = {ModelState.IsValid}");
 
             // Obtener el tipo de movimiento para saber si es Recibo o no
             var tipoMovimiento = await _context.TiposMovimiento.FindAsync(viewModel.TipoMovimientoId);
@@ -104,8 +103,6 @@ namespace GestorCuentasCorrientes.web.Controllers
             if (tipoMovimiento != null && tipoMovimiento.Codigo == "REC")
             {
                 ModelState.Remove(nameof(viewModel.Importe));
-
-                System.Diagnostics.Debug.WriteLine("🟡 Es RECIBO, limpiando Pagos vacíos y asignando Importe dummy");
                 // Filtrar líneas de pago válidas
                 viewModel.Pagos = viewModel.Pagos?.Where(p => p.MedioPagoId > 0 && p.Importe > 0).ToList() ?? new List<PagoLineaVm>();
                 // Asignar un valor dummy para pasar la validación (el real se calcula en CrearRecibo)
@@ -115,7 +112,6 @@ namespace GestorCuentasCorrientes.web.Controllers
             // Si NO es un Recibo, limpiar la lista de pagos para evitar validaciones innecesarias
             else if (tipoMovimiento != null && tipoMovimiento.Codigo != "REC")
             {
-                System.Diagnostics.Debug.WriteLine("🟡 Es movimiento SIMPLE, limpiando lista de Pagos");
                 viewModel.Pagos = new List<PagoLineaVm>();
 
                 // FIX: vaciar la lista en C# no borra los errores que el model
@@ -140,8 +136,6 @@ namespace GestorCuentasCorrientes.web.Controllers
         })
         .ToList();
 
-                foreach (var e in errores)
-                    Console.WriteLine($"[MODELSTATE ERROR] {e.Campo}: {string.Join(" | ", e.Mensajes)}");
 
                 // Reconstruir el nombre del cliente (es de solo lectura, no viaja en el POST)
                 var clientePreseleccionado = await _context.Clientes.FindAsync(viewModel.ClienteId);
@@ -164,8 +158,6 @@ namespace GestorCuentasCorrientes.web.Controllers
 
                 return View(viewModel);
             }
-
-            System.Diagnostics.Debug.WriteLine($"✅ ModelState válido. ClienteId={viewModel.ClienteId}, TipoMovimientoId={viewModel.TipoMovimientoId}, Importe={viewModel.Importe}");
 
             // Verificar que el cliente existe y está activo
             var cliente = await _context.Clientes.FindAsync(viewModel.ClienteId);
@@ -263,23 +255,17 @@ namespace GestorCuentasCorrientes.web.Controllers
             var usuarioId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(usuarioId))
             {
-                System.Diagnostics.Debug.WriteLine("🔴 No se pudo obtener el usuarioId");
                 ModelState.AddModelError("", "No se pudo identificar el usuario.");
                 return View(viewModel);
             }
-
-            System.Diagnostics.Debug.WriteLine($"✅ UsuarioId obtenido: {usuarioId}");
 
             // ============================================
             // RAMA 1: Tipo de movimiento "Recibo" (REC)
             // ============================================
             if (tipoMovimiento.Codigo == "REC")
             {
-                System.Diagnostics.Debug.WriteLine("🟡 Es un RECIBO. Llamando a CrearRecibo()");
                 return await CrearRecibo(viewModel, tipoMovimiento, usuarioId);
             }
-
-            System.Diagnostics.Debug.WriteLine("🟡 Es un movimiento SIMPLE. Continuando con la rama normal");
 
             // ============================================
             // RAMA 2: Movimientos simples (todos los demás)
@@ -328,9 +314,6 @@ namespace GestorCuentasCorrientes.web.Controllers
                 _context.Comprobantes.Add(comprobante);
                 await _context.SaveChangesAsync();
             }
-
-            System.Diagnostics.Debug.WriteLine($"✅✅✅ MOVIMIENTO GUARDADO EXITOSAMENTE. ID={movimiento.Id}, ClienteId={viewModel.ClienteId}");
-            System.Diagnostics.Debug.WriteLine($"🟢 Redirigiendo a Details del cliente...");
 
             return RedirectToAction("Details", "Clientes", new { id = viewModel.ClienteId });
         }
@@ -584,45 +567,6 @@ namespace GestorCuentasCorrientes.web.Controllers
         }
 
 
-        // GET: Movimientos/PruebaPdf
-        public IActionResult PruebaPdf()
-        {
-            var pdf = Document.Create(document =>
-            {
-                document.Page(page =>
-                {
-                    page.Size(PageSizes.A4);
-                    page.Margin(2, Unit.Centimetre);
-
-                    page.Content()
-                        .Column(column =>
-                        {
-                            column.Spacing(15);
-
-                            column.Item()
-                                .AlignCenter()
-                                .Text("GESTOR DE CUENTAS")
-                                .Bold()
-                                .FontSize(24);
-
-                            column.Item()
-                                .AlignCenter()
-                                .Text("PDF DE PRUEBA")
-                                .FontSize(18);
-
-                            column.Item()
-                                .Text("Este documento fue generado correctamente utilizando QuestPDF.")
-                                .FontSize(12);
-
-                            column.Item()
-                                .Text($"Fecha de generación: {DateTime.Now:dd/MM/yyyy HH:mm}")
-                                .FontSize(12);
-                        });
-                });
-            }).GeneratePdf();
-
-            return File(pdf, "application/pdf", "Prueba.pdf");
-        }
 
         // GET: Movimientos/VerComprobante/5
         public async Task<IActionResult> VerComprobante(int? id)
