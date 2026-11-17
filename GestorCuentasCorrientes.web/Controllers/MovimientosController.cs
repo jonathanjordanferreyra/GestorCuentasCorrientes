@@ -21,17 +21,20 @@ namespace GestorCuentasCorrientes.web.Controllers
         private readonly UserManager<Usuario> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ReciboPdfService _reciboPdfService;
+        private readonly FacturaPdfService _facturaPdfService;
 
         public MovimientosController(
             ApplicationDbContext context,
             UserManager<Usuario> userManager,
             IWebHostEnvironment webHostEnvironment,
-            ReciboPdfService reciboPdfService)
+            ReciboPdfService reciboPdfService,
+            FacturaPdfService facturaPdfService)
         {
             _context = context;
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
             _reciboPdfService = reciboPdfService;
+            _facturaPdfService = facturaPdfService;
         }
 
 
@@ -602,6 +605,38 @@ namespace GestorCuentasCorrientes.web.Controllers
             ViewBag.MediosPago = new SelectList(
                 await _context.MediosPago.OrderBy(mp => mp.Nombre).ToListAsync(),
                 "Id", "Nombre");
+        }
+
+        // GET: Movimientos/DescargarFactura/5
+        public async Task<IActionResult> DescargarFactura(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var movimiento = await _context.Movimientos
+                .Include(m => m.Cliente)
+                .Include(m => m.TipoMovimiento)
+                .Include(m => m.Presupuesto)
+                .ThenInclude(p => p!.Detalles)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (movimiento == null)
+                return NotFound();
+
+            // Validar que sea una factura (TipoMovimientoId = 1)
+            if (movimiento.TipoMovimientoId != 1)
+                return BadRequest("Solo se pueden descargar facturas en PDF.");
+
+            try
+            {
+                var pdfBytes = _facturaPdfService.GenerarPdf(movimiento);
+                return File(pdfBytes, "application/pdf", $"Factura-{movimiento.Id}.pdf");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error al generar PDF: {ex.Message}");
+            }
         }
 
         // Método helper para obtener el content-type

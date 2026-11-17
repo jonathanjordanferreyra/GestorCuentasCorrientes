@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tema.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/GestorCuentasCorrientes.web.styles.css" asp-append-version="true" />
 </head>
 
@@ -25,12 +26,9 @@
             <div class="container">
 
                 <!-- Marca -->
-                <a class="navbar-brand fw-bold"
-                   asp-area=""
-                   asp-controller="Home"
-                   asp-action="Index">
-                    Gestor de Cuentas
-                </a>
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+    <i class="bi bi-wallet2 me-2"></i>Gestor de Cuentas
+</a>
 
                 <!-- Botón responsive -->
                 <button class="navbar-toggler"
@@ -128,6 +126,21 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <script>
+    (function () {
+        var ruta = location.pathname.toLowerCase();
+        document.querySelectorAll('.navbar-nav .nav-link').forEach(function (a) {
+            var href = (a.getAttribute('href') || '').toLowerCase();
+            if (!href) return;
+
+            var activo = href === '/'
+                ? (ruta === '/' || ruta === '/home' || ruta === '/home/index')
+                : (ruta.startsWith(href) || (href === '/clientes' && ruta.startsWith('/movimientos')));
+
+            if (activo) a.classList.add('active');
+        });
+    })();
+</script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

@@ -4,102 +4,198 @@
     ViewData["Title"] = "Crear Cliente";
 }
 
-<div class="container mt-4">
+<div class="container-fluid px-0">
+
+    <!-- Encabezado -->
+    <div class="d-flex align-items-center mb-4">
+
+        <div class="page-header-icon me-3">
+            <i class="bi bi-person-plus"></i>
+        </div>
+
+        <div>
+            <h1 class="h2 fw-bold mb-1 page-title">
+                Crear Cliente
+            </h1>
+
+            <p class="text-muted mb-0">
+                Completa los datos del nuevo cliente para agregarlo a tu cartera de clientes.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Formulario -->
     <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h2>@ViewData["Title"]</h2>
-                </div>
 
-                <div class="card-body">
+        <div class="col-12 col-lg-8">
+
+            <div class="card border-0 shadow-sm form-card">
+
+                <div class="card-body p-4">
+
                     <form asp-action="Create" method="post" novalidate>
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                        <!-- Razón Social -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="RazonSocial" 
-                                       class="form-control" 
-                                       placeholder="Ej: Empresa S.A.">
-                                <label asp-for="RazonSocial"></label>
-                            </div>
-                            <span asp-validation-for="RazonSocial" class="invalid-feedback d-block"></span>
+                        @Html.AntiForgeryToken()
+
+                        <!-- Mensajes de validación -->
+                        <div asp-validation-summary="ModelOnly"
+                             class="alert alert-danger d-none" role="alert" id="validationSummary">
                         </div>
 
-                        <!-- CUIT/DNI -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="CuitDni" 
-                                       class="form-control" 
-                                       placeholder="Ej: 20-12345678-9">
-                                <label asp-for="CuitDni"></label>
-                            </div>
-                            <span asp-validation-for="CuitDni" class="invalid-feedback d-block"></span>
+                        <!-- Campo Razón Social -->
+                        <div class="mb-4">
+                            <label asp-for="RazonSocial"
+                                   class="form-label fw-semibold">
+                            </label>
+                            <input asp-for="RazonSocial"
+                                   class="form-control form-control-lg"
+                                   placeholder="Ej: Empresa S.A."
+                                   autocomplete="off" />
+                            <span asp-validation-for="RazonSocial"
+                                  class="text-danger small">
+                            </span>
                         </div>
 
-                        <!-- Localidad -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <select asp-for="LocalidadId" 
-                                        class="form-select"
-                                        asp-items="(SelectList)ViewBag.LocalidadId">
-                                    <option value="">-- Seleccionar Localidad --</option>
-                                </select>
-                                <label asp-for="LocalidadId"></label>
-                            </div>
-                            <span asp-validation-for="LocalidadId" class="invalid-feedback d-block"></span>
+                        <!-- Campo CUIT/DNI -->
+                        <div class="mb-4">
+                            <label asp-for="CuitDni"
+                                   class="form-label fw-semibold">
+                            </label>
+                            <input asp-for="CuitDni"
+                                   class="form-control form-control-lg"
+                                   placeholder="Ej: 20-12345678-9"
+                                   autocomplete="off" />
+                            <span asp-validation-for="CuitDni"
+                                  class="text-danger small">
+                            </span>
                         </div>
 
-                        <!-- Dirección -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="Direccion" 
-                                       class="form-control" 
-                                       placeholder="Ej: Calle Principal 123">
-                                <label asp-for="Direccion"></label>
+                        <!-- Fila con Localidad y Teléfono -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label asp-for="LocalidadId"
+                                           class="form-label fw-semibold">
+                                    </label>
+                                    <select asp-for="LocalidadId"
+                                            class="form-select form-select-lg"
+                                            asp-items="(SelectList)ViewBag.LocalidadId">
+                                        <option value="">-- Seleccionar Localidad --</option>
+                                    </select>
+                                    <span asp-validation-for="LocalidadId"
+                                          class="text-danger small">
+                                    </span>
+                                </div>
                             </div>
-                            <span asp-validation-for="Direccion" class="invalid-feedback d-block"></span>
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label asp-for="Telefono"
+                                           class="form-label fw-semibold">
+                                    </label>
+                                    <input asp-for="Telefono"
+                                           class="form-control form-control-lg"
+                                           placeholder="Ej: (011) 4123-4567"
+                                           autocomplete="off" />
+                                    <span asp-validation-for="Telefono"
+                                          class="text-danger small">
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Teléfono -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="Telefono" 
-                                       class="form-control" 
-                                       placeholder="Ej: (011) 4123-4567">
-                                <label asp-for="Telefono"></label>
-                            </div>
-                            <span asp-validation-for="Telefono" class="invalid-feedback d-block"></span>
+                        <!-- Campo Dirección -->
+                        <div class="mb-4">
+                            <label asp-for="Direccion"
+                                   class="form-label fw-semibold">
+                            </label>
+                            <input asp-for="Direccion"
+                                   class="form-control form-control-lg"
+                                   placeholder="Ej: Calle Principal 123, Piso 5"
+                                   autocomplete="off" />
+                            <span asp-validation-for="Direccion"
+                                  class="text-danger small">
+                            </span>
                         </div>
 
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input asp-for="Email" 
-                                       class="form-control" 
-                                       placeholder="Ej: contacto@empresa.com">
-                                <label asp-for="Email"></label>
-                            </div>
-                            <span asp-validation-for="Email" class="invalid-feedback d-block"></span>
+                        <!-- Campo Email -->
+                        <div class="mb-4">
+                            <label asp-for="Email"
+                                   class="form-label fw-semibold">
+                            </label>
+                            <input asp-for="Email"
+                                   class="form-control form-control-lg"
+                                   placeholder="Ej: contacto@empresa.com"
+                                   autocomplete="off" />
+                            <span asp-validation-for="Email"
+                                  class="text-danger small">
+                            </span>
                         </div>
 
                         <hr class="my-4">
 
                         <!-- Botones -->
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Crear Cliente
+                        <div class="d-flex flex-column flex-sm-row gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Crear Cliente
                             </button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle"></i> Cancelar
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Cancelar
                             </a>
                         </div>
+
                     </form>
+
                 </div>
+
             </div>
+
         </div>
+
+        <!-- Panel de ayuda (opcional) -->
+        <div class="col-12 col-lg-4">
+
+            <div class="card border-0 shadow-sm bg-light">
+
+                <div class="card-body">
+
+                    <h5 class="card-title fw-bold mb-3">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Información útil
+                    </h5>
+
+                    <div class="info-list">
+                        <div class="info-item mb-3">
+                            <strong class="text-primary">Razón Social</strong>
+                            <p class="small text-muted mb-0">Nombre legal de la empresa o nombre completo del cliente.</p>
+                        </div>
+
+                        <div class="info-item mb-3">
+                            <strong class="text-primary">CUIT/DNI</strong>
+                            <p class="small text-muted mb-0">Código único de identificación fiscal o documento de identidad.</p>
+                        </div>
+
+                        <div class="info-item mb-3">
+                            <strong class="text-primary">Localidad</strong>
+                            <p class="small text-muted mb-0">Ubicación geográfica del cliente. Campo obligatorio.</p>
+                        </div>
+
+                        <div class="info-item">
+                            <strong class="text-primary">Datos de contacto</strong>
+                            <p class="small text-muted mb-0">Teléfono, dirección y email para comunicaciones futuras.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
+
 </div>
 
 @section Scripts {
@@ -107,3 +203,4 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
+

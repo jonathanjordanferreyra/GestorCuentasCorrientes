@@ -232,6 +232,12 @@
                                                         <i class="bi bi-file-pdf"></i> Ver
                                                     </a>
                                                 }
+                                                else if (mov.TipoMovimientoId == 1)
+                                                {
+                                                    <a asp-controller="Movimientos" asp-action="DescargarFactura" asp-route-id="@mov.Id" class="btn btn-sm btn-outline-info" title="Descargar factura en PDF">
+                                                        <i class="bi bi-download"></i> Factura
+                                                    </a>
+                                                }
                                             </td>
                                         </tr>
                                     }

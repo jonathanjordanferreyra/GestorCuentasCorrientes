@@ -44,6 +44,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddScoped<ReciboPdfService>();
+builder.Services.AddScoped<FacturaPdfService>();
+
 //Definir la cultura predeterminada para toda la aplicación (es-AR) para moneda, fechas y otros formatos regionales
 var culturaArgentina = new CultureInfo("es-AR");
 CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;

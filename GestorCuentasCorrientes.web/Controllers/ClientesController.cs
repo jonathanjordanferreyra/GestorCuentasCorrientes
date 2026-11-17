@@ -102,12 +102,14 @@ namespace GestorCuentasCorrientes.web.Controllers
                     Id = mov.Id,
                     Fecha = mov.Fecha,
                     TipoMovimientoNombre = mov.TipoMovimiento.Nombre,
+                    TipoMovimientoId = mov.TipoMovimientoId,
                     NumeroComprobante = mov.NumeroComprobante,
                     Importe = mov.Importe,
                     Signo = mov.TipoMovimiento.Signo,
                     Anulado = mov.Anulado,
                     SaldoAcumulado = saldoActual,
-                    ComprobanteId = mov.Comprobantes.FirstOrDefault()?.Id
+                    ComprobanteId = mov.Comprobantes.FirstOrDefault()?.Id,
+                    PresupuestoId = mov.PresupuestoId
                 });
             }
 

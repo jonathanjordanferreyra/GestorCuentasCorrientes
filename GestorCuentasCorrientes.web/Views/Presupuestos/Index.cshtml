@@ -43,7 +43,7 @@
                asp-action="Create"
                class="btn btn-primary px-4 shadow-sm">
                 <i class="bi bi-plus-circle me-1"></i>
-                + Nuevo presupuesto
+                 Nuevo presupuesto
             </a>
 
         </div>
@@ -262,17 +262,23 @@
                                         </a>
 
                                         @if (presupuesto.Estado == "Pendiente")
-                                        {
-                                            <a asp-controller="Presupuestos"
-                                               asp-action="Edit"
-                                               asp-route-id="@presupuesto.Id"
-                                               class="btn btn-sm btn-outline-secondary px-3"
-                                               title="Editar">
+{
+    <a asp-controller="Presupuestos"
+       asp-action="Edit"
+       asp-route-id="@presupuesto.Id"
+       class="btn btn-sm btn-outline-secondary px-3"
+       title="Editar">
 
-                                                <i class="bi bi-pencil"></i>
+        <i class="bi bi-pencil"></i>
 
-                                            </a>
-                                        }
+    </a>
+}
+else
+{
+    <span class="btn btn-sm px-3 invisible" aria-hidden="true">
+        <i class="bi bi-pencil"></i>
+    </span>
+}
 
                                         <a asp-controller="Presupuestos"
                                            asp-action="Pdf"

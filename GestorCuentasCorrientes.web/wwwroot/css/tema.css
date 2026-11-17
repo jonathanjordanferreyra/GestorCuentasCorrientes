@@ -1,0 +1,304 @@
+﻿/* =========================================================
+   TEMA VISUAL v2: solo estilos, sin tocar HTML ni lógica.
+   Se carga DESPUÉS de site.css para poder sobrescribir.
+   Para volver atrás: borrar el <link> de _Layout.cshtml.
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    --tema-primario: #1F3A5F;
+    --tema-acento: #0D6EFD;
+    --tema-fondo: #F4F6FB;
+    --tema-texto: #1E293B;
+    --tema-suave: #64748B;
+    --tema-borde: #E2E8F0;
+    --tema-radio: 14px;
+    --tema-sombra: 0 1px 2px rgba(16, 24, 40, .04), 0 6px 18px rgba(16, 24, 40, .07);
+    --tema-sombra-hover: 0 10px 28px rgba(16, 24, 40, .14);
+}
+
+/* ---------- Base ---------- */
+body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--tema-texto);
+    -webkit-font-smoothing: antialiased;
+}
+
+    body.bg-light {
+        background-color: var(--tema-fondo) !important;
+    }
+
+@keyframes tema-entrada {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+main[role="main"] {
+    animation: tema-entrada .35s ease both;
+}
+
+/* ---------- Barra de navegación ---------- */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.navbar.bg-dark {
+    background: linear-gradient(90deg, #0F2742 0%, #1F3A5F 100%) !important;
+    box-shadow: 0 2px 14px rgba(15, 39, 66, .35) !important;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: -.2px;
+}
+
+.navbar .bi {
+    color: rgba(255, 255, 255, .75) !important;
+}
+
+.navbar-brand .bi {
+    color: #6EA8FE !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, .72);
+    font-weight: 500;
+    border-radius: 10px;
+    padding: .5rem .85rem;
+    margin: 0 .1rem;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+    .navbar-dark .navbar-nav .nav-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, .10);
+    }
+
+    .navbar-dark .navbar-nav .nav-link.active {
+        color: #fff;
+        background: rgba(255, 255, 255, .16);
+    }
+
+.navbar .nav-link.active .bi {
+    color: #fff !important;
+}
+
+/* ---------- Tarjetas ---------- */
+.card {
+    border-radius: var(--tema-radio);
+}
+
+    .card.shadow-sm {
+        box-shadow: var(--tema-sombra) !important;
+    }
+
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--tema-borde);
+}
+
+.section-title {
+    color: var(--tema-primario);
+    font-weight: 700;
+}
+
+.surface-card {
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+/* Tarjetas de resumen del Home (están dentro de un link) */
+a:hover .surface-card {
+    transform: translateY(-3px);
+    box-shadow: var(--tema-sombra-hover) !important;
+}
+
+.home-page .col-xl-3 .surface-card {
+    border-top: 4px solid var(--c, var(--tema-acento)) !important;
+}
+
+.home-page .col-xl-3:nth-child(1) .surface-card {
+    --c: #0D6EFD;
+}
+
+.home-page .col-xl-3:nth-child(2) .surface-card {
+    --c: #DC3545;
+}
+
+.home-page .col-xl-3:nth-child(3) .surface-card {
+    --c: #198754;
+}
+
+.home-page .col-xl-3:nth-child(4) .surface-card {
+    --c: #F59E0B;
+}
+
+/* ---------- Home ---------- */
+.home-page .home-hero {
+    background: radial-gradient(circle at 88% 12%, rgba(255, 255, 255, .20), transparent 42%), linear-gradient(135deg, var(--tema-primario) 0%, #2B5BA8 55%, var(--tema-acento) 100%);
+    border-radius: 20px;
+    padding: 3.25rem 1.5rem;
+    box-shadow: 0 14px 34px rgba(31, 58, 95, .28);
+}
+
+.home-page .home-hero-title {
+    color: #fff;
+    letter-spacing: -.5px;
+}
+
+.home-page .home-hero-subtitle {
+    color: rgba(255, 255, 255, .85);
+}
+
+/* El borde superior de 4px de las tarjetas de módulos ya viene de site.css */
+.module-card {
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+    .module-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--tema-sombra-hover) !important;
+    }
+
+/* ---------- Encabezados de página ---------- */
+/* Si título y botones no entran en una fila, los botones bajan en vez de apretarse */
+.container-fluid > .d-flex.justify-content-between {
+    flex-wrap: wrap;
+    row-gap: 1rem;
+}
+
+.page-header-icon {
+    background: linear-gradient(135deg, var(--tema-primario), var(--tema-acento));
+    color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 16px rgba(13, 110, 253, .30);
+}
+
+.page-title {
+    color: var(--tema-primario);
+    font-weight: 700;
+    letter-spacing: -.3px;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform .12s ease, box-shadow .12s ease, background-color .15s ease;
+}
+
+@media (min-width: 768px) {
+    .btn {
+        white-space: nowrap;
+    }
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn.disabled:hover {
+    transform: none;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--tema-acento);
+    --bs-btn-border-color: var(--tema-acento);
+    --bs-btn-hover-bg: #0B5ED7;
+    --bs-btn-hover-border-color: #0A58CA;
+    --bs-btn-active-bg: #0A58CA;
+    --bs-btn-active-border-color: #0A53BE;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, .25);
+}
+
+/* ---------- Tablas ---------- */
+.table-products thead th {
+    background: #F1F5F9;
+    color: var(--tema-suave);
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    border-bottom: 1px solid var(--tema-borde);
+}
+
+.table-products tbody tr:hover > * {
+    --bs-table-bg-state: #F1F6FF;
+}
+
+.status-pill {
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: .2px;
+}
+
+/* ---------- Formularios ---------- */
+.form-control,
+.form-select {
+    border-radius: 10px;
+    border-color: var(--tema-borde);
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--tema-acento);
+        box-shadow: 0 0 0 .22rem rgba(13, 110, 253, .15);
+    }
+
+.form-label {
+    font-weight: 600;
+    color: #334155;
+}
+
+.info-label {
+    color: var(--tema-suave);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+/* ---------- Paginación y avisos ---------- */
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 2px;
+    border-color: var(--tema-borde);
+    color: var(--tema-primario);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--tema-acento);
+    border-color: var(--tema-acento);
+    color: #fff;
+}
+
+.alert {
+    border-radius: 12px;
+}
+
+/* ---------- Accesibilidad ---------- */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .module-card:hover,
+    .btn:hover,
+    a:hover .surface-card {
+        transform: none;
+    }
+}

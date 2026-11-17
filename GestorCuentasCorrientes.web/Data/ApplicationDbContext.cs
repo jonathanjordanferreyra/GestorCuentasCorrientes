@@ -242,7 +242,7 @@ namespace GestorCuentasCorrientes.web.Data
                     .HasForeignKey(e => e.MovimientoId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
-            // ===== PRESUPUESTO =====
+            // ===== PRESUPUESTO =====j
             modelBuilder.Entity<Presupuesto>(entity =>
             {
                 // Mismo patrón que usaste en Cheques: string + CHECK, no tabla aparte
